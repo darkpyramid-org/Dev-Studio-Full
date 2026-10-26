@@ -1,7 +1,8 @@
 import type { ElementType } from "react";
-import type { TechAreaId, ServiceCategory } from "@shared/enums";
+import type { TechAreaId, SoftAreaId, ServiceCategory } from "@shared/enums";
 
-export type { TechAreaId, ServiceCategory };
+export type { TechAreaId, SoftAreaId, ServiceCategory };
+export type AreaId = TechAreaId | SoftAreaId;
 
 /**
  * Tech Skills Type Definitions
@@ -61,7 +62,7 @@ export interface SkillSubArea {
 }
 
 export interface SkillAreaData {
-  id: TechAreaId;
+  id: AreaId;
   label: string;
   icon: ElementType;
   description: string;
@@ -98,7 +99,7 @@ export interface SkillProject {
 // ── Component Props Types ──────────────────────────────────────────────────────
 
 export interface SkillAreaProps {
-  areaId: TechAreaId;
+  areaId: AreaId;
 }
 
 export interface TasksSectionProps {
@@ -128,7 +129,7 @@ export interface InterviewSectionProps {
 }
 
 export interface SkillTabsProps {
-  areaId: TechAreaId;
+  areaId: AreaId;
 }
 
 // ── Internal Component Types ───────────────────────────────────────────────────

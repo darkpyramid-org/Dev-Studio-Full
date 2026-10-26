@@ -3,7 +3,7 @@ import { useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { FreelanceOffer } from "@/types/jobs";
-import { OFFER_STATUS_COLORS, PLATFORM_COLORS, OFFER_STATUS_LABELS } from "@/constants";
+import { OFFER_STATUS_COLORS, getStatusColor, OFFER_STATUS_LABELS } from "@/constants";
 import {
   InnerSidebar,
   InnerSidebarHeader,
@@ -117,7 +117,7 @@ export function OffersSidebar({ offers, activeId, onSelect, onAdd }: Props) {
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   {offer.platform && (
                     <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded-lg font-medium ${PLATFORM_COLORS[offer.platform] ?? "bg-muted text-muted-foreground"}`}
+                      className={`text-[9px] px-1.5 py-0.5 rounded-lg font-medium ${getStatusColor(offer.platform, "platform") || "bg-muted text-muted-foreground"}`}
                     >
                       {offer.platform}
                     </span>

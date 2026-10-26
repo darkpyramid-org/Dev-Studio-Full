@@ -6,6 +6,8 @@
 
 // ── Re-export pure enum values from the single backend source of truth ─────────
 
+import type { MaterialType } from "@shared/enums";
+
 export {
   MATERIAL_TYPES,
   TYPE_LABELS,
