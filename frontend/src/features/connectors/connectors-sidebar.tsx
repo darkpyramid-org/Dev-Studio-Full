@@ -31,6 +31,21 @@ const TypeIcon = ({ type }: { type: string }) => {
   return <Icon className="size-3.5" />;
 };
 
+// Simple string lookups — new types only need one entry here
+const ADD_LABELS: Record<string, string> = {
+  companies: "New Company",
+  freelance: "New Freelance",
+  services: "New Service",
+};
+
+const TITLES: Record<string, string> = {
+  companies: "Companies",
+  hr: "HR Contacts",
+  clients: "Clients",
+  freelance: "Freelance",
+  services: "Services",
+};
+
 export function ConnectorsSidebar({
   type,
   connectors,
@@ -58,44 +73,17 @@ export function ConnectorsSidebar({
 
   const { page, setPage, totalPages, paged, total, pageSize } = usePagination(filtered, 15);
 
-  const getAddLabel = () => {
-    switch (type) {
-      case "companies":
-        return "New Company";
-      case "freelance":
-        return "New Freelance";
-      case "services":
-        return "New Service";
-      default:
-        return "New Contact";
-    }
-  };
-
-  const getTitle = () => {
-    switch (type) {
-      case "companies":
-        return "Companies";
-      case "hr":
-        return "HR Contacts";
-      case "clients":
-        return "Clients";
-      case "freelance":
-        return "Freelance";
-      case "services":
-        return "Services";
-      default:
-        return type;
-    }
-  };
+  const addLabel = ADD_LABELS[type] ?? "New Contact";
+  const title = TITLES[type] ?? type;
 
   return (
     <InnerSidebar>
       <InnerSidebarHeader
         icon={<TypeIcon type={type} />}
-        title={getTitle()}
+        title={title}
         count={typeConnectors.length}
         onAdd={onNewConnector}
-        addLabel={getAddLabel()}
+        addLabel={addLabel}
       />
       <InnerSidebarSearch
         value={searchQuery}
@@ -142,7 +130,7 @@ export function ConnectorsSidebar({
         pageSize={pageSize}
         onPageChange={setPage}
       />
-      <InnerSidebarAddButton onClick={onNewConnector} label={getAddLabel()} />
+      <InnerSidebarAddButton onClick={onNewConnector} label={addLabel} />
       <ConfirmDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {

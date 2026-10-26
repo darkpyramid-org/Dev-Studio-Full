@@ -13,12 +13,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Connector } from "@/types/tools";
-import { parsePlatformConnector } from "../platform-helpers";
+import type { Platform } from "@/types/platforms";
 import { StatusBadge, RegionBadge } from "./platform-badges";
 
 export interface PlatformTableViewProps {
-  platforms: Connector[];
+  platforms: Platform[];
   totalCount: number;
   onSelectPlatform: (id: string) => void;
   onDeletePlatform: (id: string) => void;
@@ -38,18 +37,15 @@ export function PlatformTableView({
   searchQuery,
   selectedRegion,
 }: PlatformTableViewProps) {
-  const activeCount = platforms.filter(
-    (c) => parsePlatformConnector(c).status === "active"
-  ).length;
-  const globalCount = platforms.filter(
-    (c) => parsePlatformConnector(c).regionCode === "global"
-  ).length;
-  const egCount = platforms.filter(
-    (c) => parsePlatformConnector(c).regionCode === "eg"
-  ).length;
-  const saCount = platforms.filter(
-    (c) => parsePlatformConnector(c).regionCode === "sa"
-  ).length;
+  // Single pass over the (already parsed) platforms
+  const stats = platforms.reduce(
+    (acc, p) => {
+      if (p.status === "active") acc.activeCount++;
+      acc[`${p.regionCode}Count`]++;
+      return acc;
+    },
+    { activeCount: 0, globalCount: 0, egCount: 0, saCount: 0 } as Record<string, number>,
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -138,12 +134,11 @@ export function PlatformTableView({
                 </td>
               </tr>
             ) : (
-              platforms.map((c, index) => {
-                const parsed = parsePlatformConnector(c);
+              platforms.map((p, index) => {
                 return (
                   <tr
-                    key={c.id}
-                    onClick={() => onSelectPlatform(c.id)}
+                    key={p.id}
+                    onClick={() => onSelectPlatform(p.id)}
                     className="hover:bg-muted/30 cursor-pointer transition-colors group"
                   >
                     {/* Index */}
@@ -154,34 +149,34 @@ export function PlatformTableView({
                     {/* Platform name + details */}
                     <td className="px-4 py-3">
                       <div className="font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
-                        <span>{parsed.name}</span>
-                        {parsed.arabicName && (
+                        <span>{p.name}</span>
+                        {p.arabicName && (
                           <span className="text-xs text-muted-foreground font-normal">
-                            ({parsed.arabicName})
+                            ({p.arabicName})
                           </span>
                         )}
                       </div>
                       <div className="text-[11px] text-muted-foreground/80 truncate max-w-[280px]">
-                        {parsed.bestFor}
+                        {p.bestFor}
                       </div>
                     </td>
 
                     {/* Region */}
                     <td className="px-4 py-3 hidden sm:table-cell">
-                      <RegionBadge regionCode={parsed.regionCode} />
+                      <RegionBadge regionCode={p.regionCode} />
                     </td>
 
                     {/* Website */}
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {parsed.url && parsed.url !== "https://" ? (
+                      {p.url && p.url !== "https://" ? (
                         <a
-                          href={parsed.url}
+                          href={p.url}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="text-xs text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 font-mono"
                         >
-                          {parsed.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
+                          {p.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
                           <ExternalLink className="size-3 shrink-0" />
                         </a>
                       ) : (
@@ -192,13 +187,13 @@ export function PlatformTableView({
                     {/* Commission */}
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <span className="text-xs font-mono text-muted-foreground">
-                        {parsed.commission || "—"}
+                        {p.commission || "—"}
                       </span>
                     </td>
 
                     {/* Status */}
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <StatusBadge status={parsed.status} />
+                      <StatusBadge status={p.status} />
                     </td>
 
                     {/* Actions */}
@@ -209,7 +204,7 @@ export function PlatformTableView({
                           variant="ghost"
                           className="size-7 text-muted-foreground hover:text-foreground"
                           title="View details"
-                          onClick={() => onSelectPlatform(c.id)}
+                          onClick={() => onSelectPlatform(p.id)}
                         >
                           <Eye className="size-3.5" />
                         </Button>
@@ -218,7 +213,7 @@ export function PlatformTableView({
                           variant="ghost"
                           className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Delete"
-                          onClick={() => onDeletePlatform(c.id)}
+                          onClick={() => onDeletePlatform(p.id)}
                         >
                           <Trash2 className="size-3.5" />
                         </Button>
@@ -236,10 +231,10 @@ export function PlatformTableView({
       {platforms.length > 0 && (
         <div className="px-5 py-2.5 sm:px-8 border-t border-border/60 bg-muted/20 shrink-0 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
           <span>
-            {activeCount} active &nbsp;·&nbsp;
-            {globalCount} global &nbsp;·&nbsp;
-            {egCount} eg &nbsp;·&nbsp;
-            {saCount} sa
+            {stats.activeCount} active &nbsp;·&nbsp;
+            {stats.globalCount} global &nbsp;·&nbsp;
+            {stats.egCount} eg &nbsp;·&nbsp;
+            {stats.saCount} sa
           </span>
           <span>{totalCount} total platforms</span>
         </div>

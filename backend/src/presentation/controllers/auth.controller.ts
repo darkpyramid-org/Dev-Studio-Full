@@ -8,11 +8,14 @@ import { authUsers } from "../../domain/schema.js";
 import { eq, or } from "drizzle-orm";
 import { authService } from "../../infrastructure/di/container.js";
 import { uow } from "../../infrastructure/repositories/drizzle-unit-of-work.js";
+import { getJwtSecret } from "../../infrastructure/config/env.js";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  "supersecretjwtkey_devstudio_2026_secure_random_string";
+const JWT_SECRET = getJwtSecret();
 const COOKIE_NAME = "ds_token";
+// Never expose verification codes to end users in production — they are
+// dev-only hints. In production the code is delivered via email.
+const isProd = process.env.NODE_ENV === "production";
+const devCodePayload = (token: string | null) => (isProd ? {} : { devVerificationCode: token });
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -74,14 +77,16 @@ export const register = async (req: Request, res: Response) => {
         .json({ error: "An account with this email already exists" });
 
     const user = await authService.registerUser(email, password, displayName);
-    console.log(
-      `[auth] Dev Verification Code for ${user.email}: ${user.verificationToken}`,
-    );
+    if (!isProd) {
+      console.log(
+        `[auth] Dev Verification Code for ${user.email}: ${user.verificationToken}`,
+      );
+    }
 
     res.json({
       requireVerification: true,
       email: user.email,
-      devVerificationCode: user.verificationToken,
+      ...devCodePayload(user.verificationToken),
       message: "Registration successful. Please verify your email.",
     });
   } catch (err) {
@@ -110,14 +115,16 @@ export const login = async (req: Request, res: Response) => {
 
     if (!user.isVerified) {
       const updated = await authService.createNewVerificationToken(user.id);
-      console.log(
-        `[auth] New Dev Verification Code for ${user.email}: ${updated.verificationToken}`,
-      );
+      if (!isProd) {
+        console.log(
+          `[auth] New Dev Verification Code for ${user.email}: ${updated.verificationToken}`,
+        );
+      }
       return res.status(403).json({
         error: "Please verify your email first",
         requireVerification: true,
         email: user.email,
-        devVerificationCode: updated.verificationToken,
+        ...devCodePayload(updated.verificationToken),
       });
     }
 
@@ -167,13 +174,15 @@ export const resendVerification = async (req: Request, res: Response) => {
       return res.json({ message: "Email is already verified" });
 
     const updated = await authService.createNewVerificationToken(user.id);
-    console.log(
-      `[auth] Resent Dev Verification Code for ${email}: ${updated.verificationToken}`,
-    );
+    if (!isProd) {
+      console.log(
+        `[auth] Resent Dev Verification Code for ${email}: ${updated.verificationToken}`,
+      );
+    }
     res.json({
       requireVerification: true,
       email: user.email,
-      devVerificationCode: updated.verificationToken,
+      ...devCodePayload(updated.verificationToken),
     });
   } catch (err) {
     console.error("[auth] resend-verification error:", err);

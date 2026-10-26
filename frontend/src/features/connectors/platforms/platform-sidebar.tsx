@@ -1,7 +1,6 @@
 import { Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Connector } from "@/types/tools";
-import { parsePlatformConnector } from "../platform-helpers";
+import type { Platform } from "@/types/platforms";
 import { RegionIcon, StatusBadge, regionLabel } from "./platform-badges";
 import {
   InnerSidebar,
@@ -17,7 +16,7 @@ import {
 
 export interface PlatformSidebarProps {
   totalCount: number;
-  filteredPlatforms: Connector[];
+  filteredPlatforms: Platform[];
   activeId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
@@ -106,28 +105,27 @@ export function PlatformSidebar({
             </Button>
           </div>
         ) : (
-          filteredPlatforms.map((c) => {
-            const parsed = parsePlatformConnector(c);
-            const isSelected = c.id === activeId;
+          filteredPlatforms.map((p) => {
+            const isSelected = p.id === activeId;
             return (
               <InnerSidebarItem
-                key={c.id}
+                key={p.id}
                 active={isSelected}
-                onClick={() => onSelect(c.id)}
-                onDelete={() => onDelete(c.id)}
+                onClick={() => onSelect(p.id)}
+                onDelete={() => onDelete(p.id)}
               >
                 <div className="flex items-center gap-2.5 w-full min-w-0">
-                  <RegionIcon regionCode={parsed.regionCode} className="size-[14px] shrink-0" />
+                  <RegionIcon regionCode={p.regionCode} className="size-[14px] shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-xs truncate">{parsed.name}</div>
+                    <div className="font-medium text-xs truncate">{p.name}</div>
                     <div className="truncate text-[10px] text-muted-foreground mt-0.5">
-                      {parsed.arabicName || regionLabel(parsed.regionCode)}
+                      {p.arabicName || regionLabel(p.regionCode)}
                     </div>
                     <div className="text-[9px] text-muted-foreground/60 mt-0.5 font-mono">
-                      {parsed.commission}
+                      {p.commission}
                     </div>
                   </div>
-                  <StatusBadge status={parsed.status} />
+                  <StatusBadge status={p.status} />
                 </div>
               </InnerSidebarItem>
             );

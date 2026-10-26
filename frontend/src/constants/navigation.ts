@@ -19,6 +19,18 @@ import {
   TECH_SKILLS_TAB_ICONS,
 } from "./icons";
 
+// ── Shared nav entry shape (used by AppSidebar / NavItem) ──────────────────────
+
+export interface NavEntry {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  /** Route search params to pass when navigating. */
+  search?: Record<string, string>;
+  /** Path prefixes that mark this entry as active. Defaults to [to]. */
+  match?: string[];
+}
+
 // ── Workspace Navigation ───────────────────────────────────────────────────────
 
 export interface WorkspaceNavItem {

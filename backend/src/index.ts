@@ -99,7 +99,15 @@ setupSwagger(app);
 registerRoutes(app);
 
 // --- Admin Migration endpoint ---
-app.all("/api/admin/migrate", async (_req: Request, res: Response) => {
+// Protected by the x-admin-key header. The endpoint fails closed when
+// ADMIN_KEY is not configured so the schema can never be re-run remotely
+// by an unauthenticated caller.
+app.all("/api/admin/migrate", async (req: Request, res: Response) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey || req.headers["x-admin-key"] !== adminKey) {
+    res.status(403).json({ error: "Forbidden — a valid x-admin-key header is required" });
+    return;
+  }
   try {
     schemaEnsured = false;
     const result = await ensureDatabaseTables(pool);
@@ -147,7 +155,9 @@ app.get("/api/health", async (_req: Request, res: Response) => {
         status: dbStatus,
         tablesCount: tables.length,
         hasAuthTable: tables.includes("auth_users"),
-        tables,
+        // Never expose the full table list in production — it leaks the
+        // schema to unauthenticated callers and aids reconnaissance.
+        ...(isProd ? {} : { tables }),
         ...(dbError ? { error: dbError } : {}),
       },
       env: process.env.NODE_ENV ?? "development",

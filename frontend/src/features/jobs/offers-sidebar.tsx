@@ -1,15 +1,18 @@
-import { Plus, Handshake } from "lucide-react";
-import { useState } from "react";
+import { Handshake } from "lucide-react";
+import { useMemo, useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { FreelanceOffer } from "@/types/jobs";
-import { OFFER_STATUS_COLORS, getStatusColor, OFFER_STATUS_LABELS } from "@/constants";
+import { getStatusColor, OFFER_STATUS_LABELS } from "@/constants";
 import {
   InnerSidebar,
   InnerSidebarHeader,
   InnerSidebarSearch,
   InnerSidebarFilters,
   InnerSidebarDivider,
+  InnerSidebarList,
+  InnerSidebarItem,
+  InnerSidebarEmpty,
   InnerSidebarAddButton,
 } from "@/components/layout";
 
@@ -24,30 +27,27 @@ export function OffersSidebar({ offers, activeId, onSelect, onAdd }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const FILTERS = [
-    { label: "All", value: "all" },
-    { label: "New", value: "new", count: offers.filter((o) => o.status === "new").length },
-    {
-      label: "In Review",
-      value: "in_review",
-      count: offers.filter((o) => o.status === "in_review").length,
-    },
-    {
-      label: "Accepted",
-      value: "accepted",
-      count: offers.filter((o) => o.status === "accepted").length,
-    },
-    {
-      label: "Done",
-      value: "completed",
-      count: offers.filter((o) => o.status === "completed").length,
-    },
-    {
-      label: "Rejected",
-      value: "rejected",
-      count: offers.filter((o) => o.status === "rejected").length,
-    },
-  ];
+  // Single-pass status count + memoized filter array
+  const statusCounts = useMemo(
+    () =>
+      offers.reduce<Record<string, number>>((acc, o) => {
+        acc[o.status] = (acc[o.status] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [offers],
+  );
+
+  const FILTERS = useMemo(
+    () => [
+      { label: "All", value: "all" },
+      { label: "New", value: "new", count: statusCounts["new"] ?? 0 },
+      { label: "In Review", value: "in_review", count: statusCounts["in_review"] ?? 0 },
+      { label: "Accepted", value: "accepted", count: statusCounts["accepted"] ?? 0 },
+      { label: "Done", value: "completed", count: statusCounts["completed"] ?? 0 },
+      { label: "Rejected", value: "rejected", count: statusCounts["rejected"] ?? 0 },
+    ],
+    [statusCounts],
+  );
 
   const filtered = offers.filter((o) => {
     const matchesSearch =
@@ -81,33 +81,24 @@ export function OffersSidebar({ offers, activeId, onSelect, onAdd }: Props) {
         wrap
       />
       <InnerSidebarDivider />
-      <div className="flex-1 overflow-y-auto p-2">
+      <InnerSidebarList>
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center px-4">
-            <Handshake className="size-8 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground">
-              {searchQuery || activeFilter !== "all"
-                ? "No matching offers"
-                : "No offers tracked yet."}
-            </p>
-            {!searchQuery && activeFilter === "all" && (
-              <p className="text-[10px] text-muted-foreground/60">
-                Add offers from Mostaql, Upwork, Fiverr, etc.
-              </p>
-            )}
-          </div>
+          <InnerSidebarEmpty
+            message={
+              searchQuery || activeFilter !== "all" ? "No matching offers" : "No offers tracked yet."
+            }
+            subtitle={
+              !searchQuery && activeFilter === "all"
+                ? "Add offers from Mostaql, Upwork, Fiverr, etc."
+                : undefined
+            }
+            icon={<Handshake className="size-4 text-muted-foreground/50" />}
+          />
         )}
         <ul className="space-y-0.5">
           {paged.map((offer) => (
             <li key={offer.id}>
-              <button
-                onClick={() => onSelect(offer.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
-                  activeId === offer.id
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <InnerSidebarItem active={activeId === offer.id} onClick={() => onSelect(offer.id)}>
                 <p className="text-xs font-medium truncate leading-snug">{offer.title}</p>
                 {offer.client && (
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5">
@@ -123,7 +114,7 @@ export function OffersSidebar({ offers, activeId, onSelect, onAdd }: Props) {
                     </span>
                   )}
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${OFFER_STATUS_COLORS[offer.status] ?? ""}`}
+                    className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${getStatusColor(offer.status, "offer")}`}
                   >
                     {OFFER_STATUS_LABELS[offer.status] ?? offer.status}
                   </span>
@@ -141,11 +132,11 @@ export function OffersSidebar({ offers, activeId, onSelect, onAdd }: Props) {
                     <span className="text-[9px] text-muted-foreground/60">Due {offer.deadline}</span>
                   )}
                 </div>
-              </button>
+              </InnerSidebarItem>
             </li>
           ))}
         </ul>
-      </div>
+      </InnerSidebarList>
       <ListPagination
         page={page}
         totalPages={totalPages}

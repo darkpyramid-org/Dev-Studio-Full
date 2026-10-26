@@ -1,13 +1,12 @@
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "../../infrastructure/config/env.js";
 
 // Re-export domain utilities for backward compatibility
 export { stripDates, isUUID } from "../../domain/utils.js";
 
 const COOKIE_NAME = "ds_token";
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  "supersecretjwtkey_devstudio_2026_secure_random_string";
+const JWT_SECRET = getJwtSecret();
 
 export function getUserId(req: Request): string | null {
   const token = req.cookies?.[COOKIE_NAME];

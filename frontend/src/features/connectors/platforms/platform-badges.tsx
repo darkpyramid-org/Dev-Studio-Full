@@ -1,8 +1,9 @@
 import { Globe, CheckCircle2, Star, Clock, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { PlatformRegionCode, PlatformStatus } from "@/types/platforms";
 
 export interface StatusBadgeProps {
-  status: "active" | "top_rated" | "applied" | "exploring" | "pending";
+  status: PlatformStatus | "pending";
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
@@ -40,7 +41,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 }
 
 export interface RegionBadgeProps {
-  regionCode: "global" | "eg" | "sa";
+  regionCode: PlatformRegionCode;
 }
 
 export function RegionBadge({ regionCode }: RegionBadgeProps) {
@@ -69,7 +70,7 @@ export function RegionBadge({ regionCode }: RegionBadgeProps) {
 }
 
 export interface RegionIconProps {
-  regionCode: "global" | "eg" | "sa";
+  regionCode: PlatformRegionCode;
   className?: string;
 }
 
@@ -103,7 +104,7 @@ export function RegionIcon({ regionCode, className = "size-3.5" }: RegionIconPro
   return <Globe className={cn("text-sky-500 shrink-0", className)} />;
 }
 
-export function regionLabel(regionCode: "global" | "eg" | "sa"): string {
+export function regionLabel(regionCode: PlatformRegionCode): string {
   if (regionCode === "eg") return "Egypt";
   if (regionCode === "sa") return "Saudi Arabia";
   return "Global";
