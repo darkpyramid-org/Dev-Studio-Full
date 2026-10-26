@@ -138,14 +138,12 @@ function ConnectorsPage() {
             sidebarWidth="lg:w-[260px]"
             className=""
           >
-            <div className="overflow-y-auto scrollbar-thin h-full w-full">
-              <ConnectorEditor
-                type={tab}
-                activeConnector={activeConnector}
-                onUpdateConnector={handleUpdateConnector}
-                onSave={handleSaveConnector}
-              />
-            </div>
+            <ConnectorEditor
+              type={tab}
+              activeConnector={activeConnector}
+              onUpdateConnector={handleUpdateConnector}
+              onSave={handleSaveConnector}
+            />
           </SplitLayout>
         )}
       </div>

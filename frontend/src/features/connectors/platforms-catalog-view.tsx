@@ -351,9 +351,9 @@ export function PlatformsCatalogView({
 
   // ── TABLE VIEW ──────────────────────────────────────────────
   const TableView = () => (
-    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 h-full flex flex-col">
-      {/* Table header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Table header bar pinned to top */}
+      <div className="px-5 py-3.5 sm:px-8 border-b border-border/60 bg-muted/20 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BarChart2 className="size-4 text-primary" />
           <h2 className="text-base font-semibold">
@@ -384,10 +384,10 @@ export function PlatformsCatalogView({
         </div>
       </div>
 
-      {/* Table scroll container */}
-      <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-xs">
+      {/* Table scroll container - scrollbar right at main card edge */}
+      <div className="flex-1 overflow-auto scrollbar-thin">
         <table className="w-full text-sm border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-xs">
             <tr className="border-b border-border bg-muted/40">
               <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[30px]">
                 #
@@ -548,9 +548,9 @@ export function PlatformsCatalogView({
         </table>
       </div>
 
-      {/* Footer stats */}
+      {/* Footer stats pinned to bottom */}
       {filteredPlatforms.length > 0 && (
-        <div className="flex items-center justify-between pt-3 text-[11px] text-muted-foreground font-mono">
+        <div className="px-5 py-2.5 sm:px-8 border-t border-border/60 bg-muted/20 shrink-0 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
           <span>
             {filteredPlatforms.filter((c) => parsePlatformConnector(c).status === "active").length} active
             &nbsp;·&nbsp;
@@ -576,9 +576,9 @@ export function PlatformsCatalogView({
       );
     }
     return (
-      <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 h-full flex flex-col overflow-hidden">
-        {/* Back + actions header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Back + actions header pinned to top */}
+        <div className="px-5 py-3.5 sm:px-8 border-b border-border/60 bg-muted/20 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Button
               size="sm"
@@ -639,10 +639,11 @@ export function PlatformsCatalogView({
           </div>
         </div>
 
-        {/* Form content */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
-          {/* Primary Info Card — table style */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+        {/* Form content - scrollbar sits on the right edge */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin">
+          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 flex flex-col gap-4">
+            {/* Primary Info Card — table style */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/20">
               <Building className="size-3.5 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -893,9 +894,10 @@ export function PlatformsCatalogView({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="text-[11px] text-muted-foreground font-mono pb-2">
-            Last updated: {new Date(editingPlatform.updatedAt).toLocaleString()}
+            {/* Footer */}
+            <div className="text-[11px] text-muted-foreground font-mono pb-2">
+              Last updated: {new Date(editingPlatform.updatedAt).toLocaleString()}
+            </div>
           </div>
         </div>
       </div>

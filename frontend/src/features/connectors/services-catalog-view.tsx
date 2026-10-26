@@ -388,9 +388,9 @@ ${editingService.description}
       >
         {/* Main Content Area */}
         {editingService ? (
-          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-10 h-full flex flex-col overflow-hidden">
-            {/* Top Action Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col h-full overflow-hidden">
+            {/* Top Action Header pinned to top */}
+            <div className="px-5 py-3.5 sm:px-8 border-b border-border/60 bg-muted/20 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="text-xl sm:text-2xl font-semibold capitalize">
                 {editingService.name} Details
               </h2>
@@ -432,10 +432,11 @@ ${editingService.description}
               </div>
             </div>
 
-            {/* Form & Notes Content */}
-            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
-              {/* Form Card */}
-              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-4">
+            {/* Form & Notes Content - scrollbar placed right along card border */}
+            <div className="flex-1 overflow-y-auto scrollbar-thin">
+              <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 flex flex-col gap-4">
+                {/* Form Card */}
+                <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-4">
                 {/* Service Name */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
@@ -621,7 +622,8 @@ ${editingService.description}
               </div>
             </div>
           </div>
-        ) : (
+        </div>
+      ) : (
           <div className="flex-1 flex items-center justify-center h-full text-muted-foreground">
             Select a service or create a new one to start editing.
           </div>
