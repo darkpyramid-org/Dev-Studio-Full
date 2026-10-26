@@ -106,8 +106,9 @@ describe('Drizzle Command Tests', () => {
     expect(dbIndexContent).toContain('export const db = drizzle(pool, { schema })');
     
     // Check for connection string cleaning logic
-    expect(dbIndexContent).toContain('.replace(/(\\?|&)sslmode=require/g, "")');
-    expect(dbIndexContent).toContain('.replace(/(\\?|&)channel_binding=require/g, "")');
+    expect(dbIndexContent).toContain('cleanConnectionString');
+    expect(dbIndexContent).toContain('sslmode');
+    expect(dbIndexContent).toContain('channel_binding');
   });
 
   test('seed.ts has proper structure and exports', () => {

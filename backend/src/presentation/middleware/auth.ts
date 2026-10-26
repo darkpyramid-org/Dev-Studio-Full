@@ -5,12 +5,15 @@ import jwt from "jsonwebtoken";
 export { stripDates, isUUID } from "../../domain/utils.js";
 
 const COOKIE_NAME = "ds_token";
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "supersecretjwtkey_devstudio_2026_secure_random_string";
 
 export function getUserId(req: Request): string | null {
   const token = req.cookies?.[COOKIE_NAME];
   if (token) {
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+      const payload = jwt.verify(token, JWT_SECRET) as {
         sub: string;
       };
       return payload.sub ?? null;

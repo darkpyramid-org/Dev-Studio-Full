@@ -15,10 +15,9 @@ export const createPromptSlice: StateCreator<
     setList: (list) => ({ prompts: list }),
     apiUpsert: db.upsertPrompt,
     apiDelete: db.deletePrompt,
-    toPayload: ({ usageCount, ...prompt }) => ({
+    toPayload: (prompt) => ({
       ...prompt,
-      usage_count: usageCount,
-      user_id: "",
+      usageCount: prompt.usageCount ?? 0,
     }),
   });
 

@@ -47,6 +47,7 @@ vi.mock("../../infrastructure/di/container.js", () => ({
 }));
 
 import authRoutes from "../../presentation/routes/auth.routes.js";
+import enumsRoutes from "../../presentation/routes/enums.routes.js";
 import { signToken } from "../../presentation/controllers/auth.controller.js";
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ function buildApp() {
   app.use(express.json());
   app.use(cookieParser());
   app.use("/api/auth", authRoutes);
+  app.use("/api/enums", enumsRoutes);
   return app;
 }
 
@@ -236,5 +238,42 @@ describe("Error handling — service exceptions", () => {
       .send({ email: "crash@example.com", password: "Password1!" });
 
     expect(res.status).toBe(500);
+  });
+});
+
+// ─── GET /api/enums ───────────────────────────────────────────────────────────
+
+describe("GET /api/enums — complete API flow", () => {
+  it("returns 200 with all enum categories, currencies, and activity types", async () => {
+    const res = await request(buildApp()).get("/api/enums");
+    expect(res.status).toBe(200);
+
+    // Verify root sections
+    expect(res.body).toHaveProperty("skills");
+    expect(res.body).toHaveProperty("materials");
+    expect(res.body).toHaveProperty("planner");
+    expect(res.body).toHaveProperty("jobs");
+    expect(res.body).toHaveProperty("offers");
+    expect(res.body).toHaveProperty("services");
+    expect(res.body).toHaveProperty("cv");
+    expect(res.body).toHaveProperty("core");
+    expect(res.body).toHaveProperty("integrations");
+    expect(res.body).toHaveProperty("notifications");
+    expect(res.body).toHaveProperty("activity");
+    expect(res.body).toHaveProperty("currencies");
+
+    // Verify currencies
+    expect(res.body.currencies).toEqual(
+      expect.arrayContaining(["USD", "EUR", "SAR", "EGP", "AED", "GBP"]),
+    );
+
+    // Verify activity types
+    expect(res.body.activity).toHaveProperty("ACTIVITY_TYPES");
+    expect(res.body.activity.ACTIVITY_TYPES).toEqual(
+      expect.arrayContaining(["prayer", "sports", "care", "food"]),
+    );
+
+    // Verify skills soft area ID
+    expect(res.body.skills.SOFT_AREA_ID).toBe("softskills");
   });
 });

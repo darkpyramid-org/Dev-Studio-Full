@@ -41,6 +41,7 @@ export function createCrudActions<T extends { id: string }, Payload = T>(
     } catch (err: unknown) {
       set(setList(previous));
       toast.error(`Failed to save: ${(err as Error).message}`);
+      throw err;
     }
   }
 
@@ -53,8 +54,9 @@ export function createCrudActions<T extends { id: string }, Payload = T>(
         success: `${label} deleted!`,
         error: (err) => `Failed to delete: ${(err as Error).message}`,
       });
-    } catch {
+    } catch (err) {
       set(setList(previous));
+      throw err;
     }
   }
 

@@ -1,6 +1,7 @@
 import { apiFetch } from "./base";
 import type {
   TechAreaId,
+  SoftAreaId,
   QuestionDifficulty,
   QuestionArea,
   ServiceCategory,
@@ -35,7 +36,7 @@ export interface AppEnums {
   skills: {
     TECH_AREA_IDS: readonly TechAreaId[];
     TECH_AREA_LABELS: Record<string, string>;
-    SOFT_AREA_ID: string;
+    SOFT_AREA_ID: SoftAreaId;
     SOFT_SKILL_AREA_LABEL: string;
     SOFT_SKILL_GROUPS: Record<string, { id: string; label: string }[]>;
     SPECIAL_SUB_AREAS: Record<string, { id: string; label: string; tags: readonly string[] }>;

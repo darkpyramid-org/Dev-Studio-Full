@@ -23,6 +23,15 @@ vi.mock("../../../infrastructure/lib/openai.js", () => {
   };
 });
 
+// Mock auth middleware
+vi.mock("../../middleware/auth.js", () => ({
+  requireUser: vi.fn((req, res) => {
+    if (req.cookies?.ds_token) return "mock-user-123";
+    res.status(401).json({ error: "Not authenticated" });
+    return null;
+  }),
+}));
+
 describe("Chat Controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
@@ -35,11 +44,19 @@ describe("Chat Controller", () => {
     statusMock = vi.fn().mockReturnThis();
     req = {
       body: {},
+      cookies: { ds_token: "valid-token" },
     };
     res = {
       status: statusMock,
       json: jsonMock,
     };
+  });
+
+  it("should return 401 if unauthenticated", async () => {
+    req.cookies = {};
+    await create(req as Request, res as Response);
+    expect(statusMock).toHaveBeenCalledWith(401);
+    expect(jsonMock).toHaveBeenCalledWith({ error: "Not authenticated" });
   });
 
   it("should return 400 error if prompt is missing", async () => {
