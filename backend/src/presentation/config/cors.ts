@@ -10,7 +10,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5000",
   "http://127.0.0.1:5173",
-  "https://dev-studio77.netlify.app",
+  "https://dev-studio-full.vercel.app",
   process.env.FRONTEND_URL,
   replitDomain,
 ].filter(Boolean) as string[];

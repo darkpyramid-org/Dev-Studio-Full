@@ -54,4 +54,4 @@ SLACK_SIGNING_SECRET=your_slack_signing_secret_here
 >
 > - **Never commit `.env` files to git.** The `.gitignore` is pre-configured to ignore `.env`, but always verify that your secrets are kept locally.
 > - Avoid using plain, easily guessed values for `JWT_SECRET`. Use a random hexadecimal string (e.g., generated with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
-> - In standard production deployments, use your hosting provider's native Environment Variables manager (like Vercel, Netlify, Render, or Railway environment variables settings) instead of hardcoded `.env` files.
+> - In standard production deployments, use your hosting provider's native Environment Variables manager (like Vercel, Render, or Railway environment variables settings) instead of hardcoded `.env` files.

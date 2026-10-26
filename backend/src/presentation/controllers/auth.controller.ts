@@ -209,7 +209,7 @@ export const getConfig = (_req: Request, res: Response) => {
 
 export const googleCallback = (req: Request, res: Response) => {
   const user = req.user as typeof authUsers.$inferSelect;
-  const frontendUrl = process.env.FRONTEND_URL || "https://dev-studio77.netlify.app";
+  const frontendUrl = process.env.FRONTEND_URL || "https://dev-studio-full.vercel.app";
   if (!user) return res.redirect(`${frontendUrl}/auth?error=google_failed`);
   const token = signToken(user.id);
   res.cookie(COOKIE_NAME, token, COOKIE_OPTS);
