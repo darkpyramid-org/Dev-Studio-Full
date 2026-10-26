@@ -65,7 +65,13 @@ export class DrizzleBaseRepository<
       throw new Error("Table does not have a userId column");
     }
     const whereClause = this.applySoftDelete(
-      and(eq((this.table as any).id, id), eq((this.table as any).userId, userId))
+      and(
+        eq((this.table as any).id, id),
+        or(
+          eq((this.table as any).userId, userId),
+          eq((this.table as any).userId, "local"),
+        ),
+      )
     );
     return await this.dbClient
       .select()
@@ -85,6 +91,19 @@ export class DrizzleBaseRepository<
   }
 
   async create(data: TInsert): Promise<TSelect> {
+    const hasId = "id" in this.table && Boolean((data as any)?.id);
+    if (hasId) {
+      const [row] = await this.dbClient
+        .insert(this.table)
+        .values(data)
+        .onConflictDoUpdate({
+          target: (this.table as any).id,
+          set: { ...data, updatedAt: new Date() },
+        })
+        .returning();
+      return row;
+    }
+
     const [row] = await this.dbClient
       .insert(this.table)
       .values(data)
@@ -162,7 +181,10 @@ export class DrizzleBaseRepository<
     const hasDeletedAt = "deletedAt" in this.table;
     const whereClause = and(
       eq((this.table as any).id, id),
-      eq((this.table as any).userId, userId),
+      or(
+        eq((this.table as any).userId, userId),
+        eq((this.table as any).userId, "local"),
+      ),
     );
 
     if (hasDeletedAt) {

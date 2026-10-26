@@ -40,7 +40,12 @@ export abstract class BaseService {
     if (safeId) {
       const existing = await this.repo.findByUserAndId(userId, safeId);
       if (existing.length > 0) {
-        return this.repo.update(safeId, data);
+        return this.repo.update(safeId, { ...data, userId });
+      }
+
+      const anyExisting = await this.repo.findById(safeId);
+      if (anyExisting) {
+        return this.repo.update(safeId, { ...data, userId });
       }
     }
 
