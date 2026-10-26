@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  assets:
+    name: Package & Publish Release Assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install & Build Frontend
+        run: |
+          npm ci --prefix frontend
+          npm run build:frontend
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Install & Build Backend
+        run: |
+          npm ci --include=dev --prefix backend
+          npm run build:backend
+
+      - name: Package Archives
+        run: |
+          REF_TAG="${{ github.ref_name }}"
+          tar -czf "frontend-dist-${REF_TAG}.tar.gz" -C frontend dist
+          tar -czf "backend-dist-${REF_TAG}.tar.gz" -C backend dist
+
+      - name: Upload Assets to Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: |
+            frontend-dist-${{ github.ref_name }}.tar.gz
+            backend-dist-${{ github.ref_name }}.tar.gz

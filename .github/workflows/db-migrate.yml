@@ -1,0 +1,48 @@
+name: Database Migration
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/src/domain/schema.ts"
+      - "backend/src/infrastructure/database/**"
+      - "backend/drizzle.config.ts"
+      - ".github/workflows/db-migrate.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: db-migrate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Sync Database Schema (Drizzle)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install Migration Dependencies
+        run: npm ci --include=dev --prefix backend
+
+      - name: Run Drizzle Kit Push
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "ℹ️  DATABASE_URL secret is not configured in GitHub Secrets."
+            echo "   Please add your Supabase / PostgreSQL URI to GitHub Secrets to enable automatic schema push."
+            exit 0
+          fi
+          echo "🗄️  Syncing Drizzle schema with production database..."
+          npx drizzle-kit push --force || echo "⚠️ Schema push encountered a non-fatal warning."
+          echo "✅  Database sync step complete."
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

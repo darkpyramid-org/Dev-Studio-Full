@@ -1,0 +1,44 @@
+name: Deploy to Vercel
+
+on:
+  workflow_run:
+    workflows: ["Frontend CI", "Backend CI"]
+    types: [completed]
+    branches: ["main"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vercel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Vercel Production Deploy
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'release') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via Vercel CLI
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "ℹ️  VERCEL_TOKEN is not configured in GitHub Secrets."
+            echo "   If your repository is connected directly via the Vercel Dashboard, deployments occur automatically on git push."
+            echo "   To manage deployments via this workflow, add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID."
+            exit 0
+          fi
+          npm install -g vercel
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
