@@ -86,7 +86,7 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("[auth] register error:", err);
-    res.status(500).json({ error: "Registration failed" });
+    res.status(500).json({ error: "Registration failed", details: (err as Error)?.message });
   }
 };
 
@@ -124,7 +124,7 @@ export const login = async (req: Request, res: Response) => {
     sendToken(res, user.id, safeUser(user));
   } catch (err) {
     console.error("[auth] login error:", err);
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: "Login failed", details: (err as Error)?.message });
   }
 };
 

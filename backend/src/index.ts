@@ -72,11 +72,17 @@ app.get("/api/health", async (_req: Request, res: Response) => {
 
     let dbStatus = "not_configured";
     let dbError: string | null = null;
+    let tables: string[] = [];
 
     if (isDbConfigured) {
       try {
         await pool.query("SELECT 1");
         dbStatus = "connected";
+
+        const tablesResult = await pool.query(
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
+        );
+        tables = tablesResult.rows.map((r: { table_name: string }) => r.table_name);
       } catch (err: unknown) {
         dbStatus = "error";
         dbError = (err as Error)?.message || String(err);
@@ -89,6 +95,9 @@ app.get("/api/health", async (_req: Request, res: Response) => {
       database: {
         configured: isDbConfigured,
         status: dbStatus,
+        tablesCount: tables.length,
+        hasAuthTable: tables.includes("auth_users"),
+        tables,
         ...(dbError ? { error: dbError } : {}),
       },
       env: process.env.NODE_ENV ?? "development",
