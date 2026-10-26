@@ -17,6 +17,7 @@ JWT_SECRET=super_secure_unpredictable_key_here
 
 # Database Configuration
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/dev_studio_db
+# Vercel Postgres/Supabase integrations can use POSTGRES_URL instead.
 
 # Artificial Intelligence (AI)
 OPENAI_API_KEY=sk-proj-...
