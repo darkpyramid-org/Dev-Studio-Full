@@ -18,7 +18,10 @@ describe('Drizzle Command Tests', () => {
     expect(configContent).toContain('schema: "./src/domain/schema.ts"');
     expect(configContent).toContain('dialect: "postgresql"');
     expect(configContent).toContain('dbCredentials:');
-    expect(configContent).toContain('url: process.env.DATABASE_URL!');
+    // Config supports multiple env var fallbacks for different hosting providers
+    expect(configContent).toContain('DATABASE_URL');
+    // Config handles SSL for managed Postgres providers (Supabase, Neon)
+    expect(configContent).toContain('rejectUnauthorized');
   });
 
   test('migration folder structure is correct', () => {
