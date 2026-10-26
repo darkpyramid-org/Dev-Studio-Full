@@ -27,7 +27,7 @@ describe("createCrudActions factory", () => {
     const apiDelete = vi.fn().mockRejectedValue(new Error("API Delete Failed"));
     const apiUpsert = vi.fn();
 
-    const actions = createCrudActions<TestState, TestItem>(set, get, {
+    const actions = createCrudActions<TestItem, TestItem, TestState>(set, get, {
       label: "Item",
       getList: (s) => s.items,
       setList: (items) => ({ items }),
@@ -60,7 +60,7 @@ describe("createCrudActions factory", () => {
     const apiDelete = vi.fn().mockResolvedValue(undefined);
     const apiUpsert = vi.fn();
 
-    const actions = createCrudActions<TestState, TestItem>(set, get, {
+    const actions = createCrudActions<TestItem, TestItem, TestState>(set, get, {
       label: "Item",
       getList: (s) => s.items,
       setList: (items) => ({ items }),

@@ -1,22 +1,19 @@
 import { toast } from "sonner";
 import type { ForgeState } from "./types";
 
-type SetState = (partial: Partial<ForgeState> | ((s: ForgeState) => Partial<ForgeState>)) => void;
-type GetState = () => ForgeState;
-
-interface CrudConfig<T extends { id: string }, Payload = T> {
+interface CrudConfig<S, T extends { id: string }, Payload = T> {
   label: string;
-  getList: (state: ForgeState) => T[];
-  setList: (list: T[]) => Partial<ForgeState>;
+  getList: (state: S) => T[];
+  setList: (list: T[]) => Partial<S>;
   apiUpsert: (item: Payload) => Promise<T>;
   apiDelete: (id: string) => Promise<void>;
   toPayload?: (item: T) => Payload;
 }
 
-export function createCrudActions<T extends { id: string }, Payload = T>(
-  set: SetState,
-  get: GetState,
-  config: CrudConfig<T, Payload>,
+export function createCrudActions<T extends { id: string }, Payload = T, S = ForgeState>(
+  set: (partial: Partial<S> | ((s: S) => Partial<S>)) => void,
+  get: () => S,
+  config: CrudConfig<S, T, Payload>,
 ) {
   const { label, getList, setList, apiUpsert, apiDelete, toPayload } = config;
 
