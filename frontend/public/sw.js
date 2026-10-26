@@ -29,6 +29,9 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Extension scripts and external resources cannot be stored in this origin's cache.
+  if (url.origin !== self.location.origin) return;
+
   // Never intercept API calls — always go to network
   if (url.pathname.startsWith("/api/")) return;
 
