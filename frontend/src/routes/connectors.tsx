@@ -52,10 +52,19 @@ function ConnectorsPage() {
   }, [activeConnectorId]);
 
   const handleNewConnector = () => {
+    const defaultName =
+      tab === "companies"
+        ? "New Company"
+        : tab === "freelance"
+          ? "New Freelance Contact"
+          : tab === "services"
+            ? "New Service Provider"
+            : "New Contact";
+
     const next: Connector = {
       id: newId("conn"),
       type: tab,
-      name: "New Contact",
+      name: defaultName,
       email: "",
       phone: "",
       notes: "",

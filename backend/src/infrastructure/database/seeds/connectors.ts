@@ -1,9 +1,11 @@
+import type { ConnectorType } from "../../../domain/enums.js";
+
 const now = Date.now();
 const d = (days: number) => now - 86400000 * days;
 
 export interface ConnectorSeed {
   id: string;
-  type: "companies" | "hr" | "clients";
+  type: ConnectorType;
   name: string;
   email?: string;
   phone?: string;
@@ -96,5 +98,41 @@ export const seedConnectors: ConnectorSeed[] = [
     notes: "Design agency. Subcontracts dev work. Prefers fixed-price. Good for filler work between projects.",
     createdAt: d(50),
     updatedAt: d(15),
+  },
+  {
+    id: "conn_10",
+    type: "freelance",
+    name: "Upwork Enterprise Client",
+    email: "enterprise-client@upwork.com",
+    notes: "Direct contract for React/Node.js architecture audit. High hourly rate.",
+    createdAt: d(20),
+    updatedAt: d(2),
+  },
+  {
+    id: "conn_11",
+    type: "freelance",
+    name: "Mostaql SaaS Founder",
+    email: "founder@techventure.io",
+    notes: "MVP build for marketplace platform. Looking for fullstack development.",
+    createdAt: d(15),
+    updatedAt: d(1),
+  },
+  {
+    id: "conn_12",
+    type: "services",
+    name: "Cloud Infra & DevOps Consulting",
+    email: "devops@cloudconsult.tech",
+    notes: "Service provider for AWS/GCP cloud architecture and CI/CD pipelines.",
+    createdAt: d(25),
+    updatedAt: d(4),
+  },
+  {
+    id: "conn_13",
+    type: "services",
+    name: "UI/UX Design Studio",
+    email: "studio@creativelab.design",
+    notes: "External design agency partnership for mobile and web product designs.",
+    createdAt: d(10),
+    updatedAt: d(3),
   },
 ];

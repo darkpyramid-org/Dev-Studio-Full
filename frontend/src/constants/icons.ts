@@ -38,6 +38,8 @@ import {
   Database,
   BookOpen,
   LayoutTemplate,
+  Laptop,
+  Wrench,
   // Tech Skills
   Cpu,
   Network,
@@ -228,6 +230,8 @@ export const CONNECTOR_TYPE_ICONS = {
   companies: Building2,
   hr: Briefcase,
   clients: Users,
+  freelance: Laptop,
+  services: Wrench,
 } as const;
 
 // ── CV Builder Section Icons ───────────────────────────────────────────────────

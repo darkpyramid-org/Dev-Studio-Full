@@ -74,6 +74,8 @@ function Index() {
   const companiesCount = connectors.filter((c) => c.type === "companies").length;
   const hrCount = connectors.filter((c) => c.type === "hr").length;
   const clientsCount = connectors.filter((c) => c.type === "clients").length;
+  const freelanceCount = connectors.filter((c) => c.type === "freelance").length;
+  const servicesCount = connectors.filter((c) => c.type === "services").length;
   const linkedInDrafts = socialDrafts.filter((d) => d.platform === "linkedin").length;
   const twitterDrafts = socialDrafts.filter((d) => d.platform === "twitter").length;
   const instagramDrafts = socialDrafts.filter((d) => d.platform === "instagram").length;
@@ -120,7 +122,7 @@ function Index() {
     {
       label: "Connectors",
       value: connectors.length,
-      hint: `${companiesCount} co · ${hrCount} HR`,
+      hint: `${companiesCount} co · ${hrCount} HR · ${freelanceCount + servicesCount + clientsCount} other`,
       icon: Users,
       to: "/connectors" as const,
     },

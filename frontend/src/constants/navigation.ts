@@ -149,10 +149,12 @@ export const MAIL_TABS: MailTab[] = [
   { id: "whatsapp", label: "WhatsApp", icon: MAIL_CHANNEL_ICONS.whatsapp },
 ] as const;
 
+import type { ConnectorType } from "./enums";
+
 // ── Connector Type Tabs ────────────────────────────────────────────────────────
 
 export interface ConnectorTab {
-  id: "companies" | "hr" | "clients";
+  id: ConnectorType;
   label: string;
   icon: LucideIcon;
 }
@@ -161,6 +163,8 @@ export const CONNECTORS_TABS: ConnectorTab[] = [
   { id: "companies", label: "Companies", icon: CONNECTOR_TYPE_ICONS.companies },
   { id: "hr", label: "HR Contacts", icon: CONNECTOR_TYPE_ICONS.hr },
   { id: "clients", label: "Clients", icon: CONNECTOR_TYPE_ICONS.clients },
+  { id: "freelance", label: "Freelance", icon: CONNECTOR_TYPE_ICONS.freelance },
+  { id: "services", label: "Services", icon: CONNECTOR_TYPE_ICONS.services },
 ] as const;
 
 // ── CV Builder Tabs ────────────────────────────────────────────────────────────

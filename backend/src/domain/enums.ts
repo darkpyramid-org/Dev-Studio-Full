@@ -235,7 +235,13 @@ export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
 // --- Integrations Enums ---
 
-export const CONNECTOR_TYPES = ["companies", "hr", "clients"] as const;
+export const CONNECTOR_TYPES = [
+  "companies",
+  "hr",
+  "clients",
+  "freelance",
+  "services",
+] as const;
 export type ConnectorType = (typeof CONNECTOR_TYPES)[number];
 
 export const SOCIAL_PLATFORMS = ["linkedin", "twitter", "instagram"] as const;

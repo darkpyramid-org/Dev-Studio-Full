@@ -70,7 +70,7 @@ export interface Snippet {
 
 export interface Connector {
   id: string;
-  type: ConnectorType; // companies, hr, clients
+  type: ConnectorType; // companies, hr, clients, freelance, services
   name: string;
   email?: string;
   phone?: string;

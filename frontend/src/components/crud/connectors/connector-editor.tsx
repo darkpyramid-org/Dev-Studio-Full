@@ -24,11 +24,54 @@ export function ConnectorEditor({
     );
   }
 
+  const getTitle = () => {
+    switch (type) {
+      case "companies":
+        return "Company";
+      case "hr":
+        return "HR Contact";
+      case "clients":
+        return "Client";
+      case "freelance":
+        return "Freelance Contact";
+      case "services":
+        return "Service Provider";
+      default:
+        return type.replace("-", " ");
+    }
+  };
+
+  const getNamePlaceholder = () => {
+    switch (type) {
+      case "companies":
+        return "Enter company name...";
+      case "freelance":
+        return "Enter client or freelance project name...";
+      case "services":
+        return "Enter service or provider name...";
+      default:
+        return "Enter contact name...";
+    }
+  };
+
+  const getNotesPlaceholder = () => {
+    switch (type) {
+      case "companies":
+        return "Add notes about this company...\n\n- Meeting dates\n- Interaction history\n- Important context";
+      case "freelance":
+        return "Add notes about this freelance engagement...\n\n- Project scope & deliverables\n- Rate & payment milestones\n- Client feedback";
+      case "services":
+        return "Add notes about this service...\n\n- Service offerings & SLA\n- Pricing & billing cycle\n- Support & account contacts";
+      default:
+        return "Add notes about this contact...\n\n- Meeting dates\n- Interaction history\n- Important context";
+    }
+  };
+
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-10 h-full flex flex-col overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold capitalize">
-          {type.replace("-", " ")} Details
+          {getTitle()} Details
         </h2>
         <Button
           onClick={onSave}
@@ -49,7 +92,7 @@ export function ConnectorEditor({
               value={activeConnector.name || ""}
               onChange={(e) => onUpdateConnector({ name: e.target.value })}
               className="flex-1 font-medium"
-              placeholder={`Enter ${type === "companies" ? "company" : "contact"} name...`}
+              placeholder={getNamePlaceholder()}
             />
           </div>
 
@@ -88,7 +131,7 @@ export function ConnectorEditor({
             value={activeConnector.notes || ""}
             onChange={(e) => onUpdateConnector({ notes: e.target.value })}
             className="w-full flex-1 resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none text-sm leading-relaxed bg-transparent"
-            placeholder={`Add notes about this ${type === "companies" ? "company" : "contact"}...\n\n- Meeting dates\n- Interaction history\n- Important context`}
+            placeholder={getNotesPlaceholder()}
           />
           <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground font-mono">
             <span>Last updated: {new Date(activeConnector.updatedAt).toLocaleString()}</span>

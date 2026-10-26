@@ -1,10 +1,10 @@
-import { Users, Building2, Briefcase } from "lucide-react";
+import { Users } from "lucide-react";
 import { useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { Connector } from "@/types/tools";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CONNECTOR_CONTACT_FILTERS } from "@/constants";
+import { CONNECTOR_CONTACT_FILTERS, CONNECTOR_TYPE_ICONS } from "@/constants";
 import {
   InnerSidebar,
   InnerSidebarHeader,
@@ -27,9 +27,8 @@ interface ConnectorsSidebarProps {
 }
 
 const TypeIcon = ({ type }: { type: string }) => {
-  if (type === "companies") return <Building2 className="size-3.5" />;
-  if (type === "hr") return <Briefcase className="size-3.5" />;
-  return <Users className="size-3.5" />;
+  const Icon = CONNECTOR_TYPE_ICONS[type as keyof typeof CONNECTOR_TYPE_ICONS] || Users;
+  return <Icon className="size-3.5" />;
 };
 
 export function ConnectorsSidebar({
@@ -59,14 +58,44 @@ export function ConnectorsSidebar({
 
   const { page, setPage, totalPages, paged, total, pageSize } = usePagination(filtered, 15);
 
+  const getAddLabel = () => {
+    switch (type) {
+      case "companies":
+        return "New Company";
+      case "freelance":
+        return "New Freelance";
+      case "services":
+        return "New Service";
+      default:
+        return "New Contact";
+    }
+  };
+
+  const getTitle = () => {
+    switch (type) {
+      case "companies":
+        return "Companies";
+      case "hr":
+        return "HR Contacts";
+      case "clients":
+        return "Clients";
+      case "freelance":
+        return "Freelance";
+      case "services":
+        return "Services";
+      default:
+        return type;
+    }
+  };
+
   return (
     <InnerSidebar>
       <InnerSidebarHeader
         icon={<TypeIcon type={type} />}
-        title={type}
+        title={getTitle()}
         count={typeConnectors.length}
         onAdd={onNewConnector}
-        addLabel="New Contact"
+        addLabel={getAddLabel()}
       />
       <InnerSidebarSearch
         value={searchQuery}
@@ -113,7 +142,7 @@ export function ConnectorsSidebar({
         pageSize={pageSize}
         onPageChange={setPage}
       />
-      <InnerSidebarAddButton onClick={onNewConnector} label="New Contact" />
+      <InnerSidebarAddButton onClick={onNewConnector} label={getAddLabel()} />
       <ConfirmDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {
