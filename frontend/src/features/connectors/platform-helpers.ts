@@ -5,7 +5,7 @@ export interface ParsedPlatform {
   id: string;
   name: string;
   arabicName?: string;
-  region: "Global 🌐" | "Egypt 🇪🇬" | "Saudi Arabia 🇸🇦";
+  region: "Global" | "Egypt" | "Saudi Arabia";
   regionCode: "global" | "eg" | "sa";
   url: string;
   myProfileUrl?: string;
@@ -53,16 +53,16 @@ export function parsePlatformConnector(c: Connector): ParsedPlatform {
   }
 
   // Region detection from category
-  let region: "Global 🌐" | "Egypt 🇪🇬" | "Saudi Arabia 🇸🇦" = "Global 🌐";
+  let region: "Global" | "Egypt" | "Saudi Arabia" = "Global";
   const cat = (c.category || "").toLowerCase();
   if (cat.includes("saudi") || cat.includes("sa") || regionCode === "sa") {
-    region = "Saudi Arabia 🇸🇦";
+    region = "Saudi Arabia";
     regionCode = "sa";
   } else if (cat.includes("egypt") || cat.includes("eg") || regionCode === "eg") {
-    region = "Egypt 🇪🇬";
+    region = "Egypt";
     regionCode = "eg";
   } else {
-    region = "Global 🌐";
+    region = "Global";
     regionCode = "global";
   }
 
@@ -136,10 +136,10 @@ export function serializePlatformConnector(
 export function getPlatformFlag(regionCode: string): string {
   switch (regionCode) {
     case "sa":
-      return "🇸🇦";
+      return "SA";
     case "eg":
-      return "🇪🇬";
+      return "EG";
     default:
-      return "🌐";
+      return "GL";
   }
 }

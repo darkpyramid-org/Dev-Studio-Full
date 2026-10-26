@@ -2,7 +2,7 @@ export interface PlatformPreset {
   id: string;
   name: string;
   arabicName?: string;
-  region: "Global 🌐" | "Egypt 🇪🇬" | "Saudi Arabia 🇸🇦";
+  region: "Global" | "Egypt" | "Saudi Arabia";
   regionCode: "global" | "eg" | "sa";
   url: string;
   commission: string;
@@ -14,9 +14,9 @@ export interface PlatformPreset {
 
 export const PLATFORM_REGIONS = [
   "All",
-  "Global 🌐",
-  "Egypt 🇪🇬",
-  "Saudi Arabia 🇸🇦",
+  "Global",
+  "Egypt",
+  "Saudi Arabia",
 ] as const;
 
 export const PRESET_PLATFORMS: PlatformPreset[] = [
@@ -24,7 +24,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "upwork",
     name: "Upwork",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.upwork.com",
     commission: "10% Flat Fee",
@@ -36,7 +36,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "fiverr",
     name: "Fiverr",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.fiverr.com",
     commission: "20% Seller Fee",
@@ -48,7 +48,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "toptal",
     name: "Toptal",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.toptal.com",
     commission: "0% Freelancer Fee (Paid by Client)",
@@ -60,7 +60,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "freelancer",
     name: "Freelancer",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.freelancer.com",
     commission: "10% or $5 Fee",
@@ -72,7 +72,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "guru",
     name: "Guru",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.guru.com",
     commission: "5% - 9% Fee",
@@ -84,7 +84,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "peopleperhour",
     name: "PeoplePerHour",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.peopleperhour.com",
     commission: "20% to 5% (Tiered)",
@@ -96,7 +96,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "contra",
     name: "Contra",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://contra.com",
     commission: "0% Commission",
@@ -108,7 +108,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "truelancer",
     name: "Truelancer",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://www.truelancer.com",
     commission: "8% - 10% Fee",
@@ -120,7 +120,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
   {
     id: "wellfound",
     name: "Wellfound (AngelList Talent)",
-    region: "Global 🌐",
+    region: "Global",
     regionCode: "global",
     url: "https://wellfound.com",
     commission: "0% Candidate Fee",
@@ -135,7 +135,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "aykhedmah",
     name: "Aykhedmah (أي خدمة)",
     arabicName: "منصة أي خدمة",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://aykhedma.com",
     commission: "10% - 15% Fee",
@@ -148,7 +148,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "picalica",
     name: "Picalica (بيكاليكا)",
     arabicName: "متجر بيكاليكا للمنتجات الرقمية",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://picalica.com",
     commission: "Marketplace Commission",
@@ -161,7 +161,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "kadmaity",
     name: "Khadmaity (خدماتي)",
     arabicName: "منصة خدماتي",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://khadmaity.com",
     commission: "10% - 20% Fee",
@@ -174,7 +174,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "mowzaf",
     name: "Mowzaf (موظف)",
     arabicName: "منصة موظف للتوظيف والعمل عن بعد",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://mowzaf.com",
     commission: "Free / Employer Paid",
@@ -187,7 +187,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "tasmeemme",
     name: "Tasmeem ME (تصميمي)",
     arabicName: "شبكة تصميمي للمبدعين",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://www.tasmeemme.com",
     commission: "Commission per project",
@@ -200,7 +200,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "forlanso",
     name: "Forlanso (فورلانسو)",
     arabicName: "منصة فورلانسو للعمل الحر",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://forlanso.com",
     commission: "Platform Fee",
@@ -213,7 +213,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "malt",
     name: "Malt",
     arabicName: "مجتمع مالت للاستشارات",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://www.malt.com",
     commission: "10% to 5% (Repeat Client Discounts)",
@@ -226,7 +226,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "brightgaza",
     name: "BrightGaza (برايت غزة)",
     arabicName: "برايت غزة للعمل التقني الحر",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://brightgaza.com",
     commission: "Direct Matching / Social Impact",
@@ -239,7 +239,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "mostaql",
     name: "Mostaql (مستقل)",
     arabicName: "منصة مستقل — حسوب",
-    region: "Egypt 🇪🇬",
+    region: "Egypt",
     regionCode: "eg",
     url: "https://mostaql.com",
     commission: "15% - 20% Fee",
@@ -254,7 +254,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "sabbar",
     name: "منصة صبّار (Sabbar)",
     arabicName: "صبّار — العمل المرن والجزئي في السعودية",
-    region: "Saudi Arabia 🇸🇦",
+    region: "Saudi Arabia",
     regionCode: "sa",
     url: "https://sabbar.com",
     commission: "Company Paid / Instant Worker Payouts",
@@ -267,7 +267,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "shiftat",
     name: "منصة شفتات (Shiftat)",
     arabicName: "شفتات — منصة الشفتات والعمل المرن بالمملكة",
-    region: "Saudi Arabia 🇸🇦",
+    region: "Saudi Arabia",
     regionCode: "sa",
     url: "https://shiftat.sa",
     commission: "Transparent Shift Payouts",
@@ -280,7 +280,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "parttime_sa",
     name: "منصة بارت تايم (Part-Time Saudi)",
     arabicName: "بارت تايم السعودية",
-    region: "Saudi Arabia 🇸🇦",
+    region: "Saudi Arabia",
     regionCode: "sa",
     url: "https://parttime.sa",
     commission: "0% Candidate Fee",
@@ -293,7 +293,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "ptway",
     name: "منصة بي تي واي (PTway)",
     arabicName: "منصة بي تي واي للعمل الجزئي والحر",
-    region: "Saudi Arabia 🇸🇦",
+    region: "Saudi Arabia",
     regionCode: "sa",
     url: "https://ptway.net",
     commission: "Direct Contract Terms",
@@ -306,7 +306,7 @@ export const PRESET_PLATFORMS: PlatformPreset[] = [
     id: "bahr_sa",
     name: "منصة بحر (Bahr / تسعة أعشار)",
     arabicName: "منصة بحر للمستقلين — صندوق تنمية الموارد البشرية",
-    region: "Saudi Arabia 🇸🇦",
+    region: "Saudi Arabia",
     regionCode: "sa",
     url: "https://bahr.910ths.sa",
     commission: "Supported by HRDF (هدف)",

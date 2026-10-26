@@ -12,6 +12,17 @@ import {
   CheckCircle2,
   UserCheck,
   Building,
+  LayoutGrid,
+  Table2,
+  Star,
+  Clock,
+  Search,
+  Eye,
+  MoreHorizontal,
+  ChevronRight,
+  BarChart2,
+  X,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea } from "@/features/tools/shared";
@@ -32,7 +43,6 @@ import {
 import {
   parsePlatformConnector,
   serializePlatformConnector,
-  getPlatformFlag,
   type ParsedPlatform,
 } from "./platform-helpers";
 import {
@@ -47,11 +57,97 @@ import {
   InnerSidebarAddButton,
   SplitLayout,
 } from "@/components/layout";
+import { cn } from "@/lib/utils";
 
 interface PlatformsCatalogViewProps {
   connectors: Connector[];
   onUpsert: (connector: Connector) => void;
   onDelete: (id: string) => void;
+}
+
+/* ── Region icon helpers (Lucide-only, no emoji) ───────────── */
+function RegionIcon({ regionCode, className }: { regionCode: string; className?: string }) {
+  if (regionCode === "eg") {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center justify-center rounded-sm bg-[#CE1126] text-white text-[9px] font-bold leading-none select-none shrink-0",
+          className ?? "size-4",
+        )}
+        title="Egypt"
+        aria-label="Egypt"
+      >
+        EG
+      </span>
+    );
+  }
+  if (regionCode === "sa") {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center justify-center rounded-sm bg-[#006C35] text-white text-[9px] font-bold leading-none select-none shrink-0",
+          className ?? "size-4",
+        )}
+        title="Saudi Arabia"
+        aria-label="Saudi Arabia"
+      >
+        SA
+      </span>
+    );
+  }
+  return (
+    <Globe
+      className={cn("text-sky-500 shrink-0", className ?? "size-4")}
+      aria-label="Global"
+    />
+  );
+}
+
+function regionLabel(regionCode: string) {
+  if (regionCode === "eg") return "Egypt";
+  if (regionCode === "sa") return "Saudi Arabia";
+  return "Global";
+}
+
+/* ── Status badge ──────────────────────────────────────────── */
+function StatusBadge({ status }: { status: ParsedPlatform["status"] }) {
+  const map: Record<
+    ParsedPlatform["status"],
+    { label: string; icon: React.ReactNode; cls: string }
+  > = {
+    active: {
+      label: "Active",
+      icon: <CheckCircle2 className="size-3 shrink-0" />,
+      cls: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    },
+    top_rated: {
+      label: "Top Rated",
+      icon: <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" />,
+      cls: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    },
+    applied: {
+      label: "Pending",
+      icon: <Clock className="size-3 shrink-0" />,
+      cls: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    },
+    exploring: {
+      label: "Exploring",
+      icon: <Search className="size-3 shrink-0" />,
+      cls: "bg-muted text-muted-foreground border-border",
+    },
+  };
+  const { label, icon, cls } = map[status] ?? map.exploring;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold",
+        cls,
+      )}
+    >
+      {icon}
+      {label}
+    </span>
+  );
 }
 
 export function PlatformsCatalogView({
@@ -64,7 +160,7 @@ export function PlatformsCatalogView({
     [connectors]
   );
 
-  // Deduplicate platform connectors by normalized name so no duplicates appear
+  // Deduplicate by normalized name
   const uniquePlatformConnectors = useMemo(() => {
     const seen = new Set<string>();
     const list: Connector[] = [];
@@ -82,12 +178,13 @@ export function PlatformsCatalogView({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "detail">("table");
 
   // Editable platform state
   const [editingPlatform, setEditingPlatform] = useState<ParsedPlatform | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-select first platform when list loads or changes
+  // Auto-select first platform when list loads
   useEffect(() => {
     if (uniquePlatformConnectors.length > 0) {
       if (!activeId || !uniquePlatformConnectors.some((c) => c.id === activeId)) {
@@ -145,18 +242,17 @@ export function PlatformsCatalogView({
 
     return [
       { label: "All", value: "all", count: uniquePlatformConnectors.length },
-      { label: "Global 🌐", value: "global", count: globalCount },
-      { label: "Egypt 🇪🇬", value: "eg", count: egCount },
-      { label: "Saudi Arabia 🇸🇦", value: "sa", count: saCount },
+      { label: "Global", value: "global", count: globalCount },
+      { label: "Egypt", value: "eg", count: egCount },
+      { label: "Saudi Arabia", value: "sa", count: saCount },
     ];
   }, [uniquePlatformConnectors]);
 
-  // 1-Click Load All 22 Presets (deduplicated)
+  // Load all 22 presets (deduplicated)
   const handleLoadPresets = () => {
     const existingNames = new Set(
       uniquePlatformConnectors.map((s) => s.name.trim().toLowerCase())
     );
-
     let addedCount = 0;
     for (const preset of PRESET_PLATFORMS) {
       if (!existingNames.has(preset.name.trim().toLowerCase())) {
@@ -181,7 +277,6 @@ export function PlatformsCatalogView({
         addedCount++;
       }
     }
-
     if (addedCount > 0) {
       toast.success(`Loaded ${addedCount} platforms into your list!`);
     } else {
@@ -189,7 +284,6 @@ export function PlatformsCatalogView({
     }
   };
 
-  // Create new platform
   const handleCreateNewPlatform = (preset?: PlatformPreset) => {
     const id = newId("plt");
     const newPlatformData: ParsedPlatform = preset
@@ -212,7 +306,7 @@ export function PlatformsCatalogView({
       : {
           id,
           name: "New Freelance Platform",
-          region: "Global 🌐",
+          region: "Global",
           regionCode: "global",
           url: "https://",
           commission: "Standard Commission",
@@ -228,10 +322,10 @@ export function PlatformsCatalogView({
     onUpsert(connector);
     setActiveId(id);
     setEditingPlatform(newPlatformData);
+    setViewMode("detail");
     toast.success(`Created platform "${newPlatformData.name}"`);
   };
 
-  // Save changes
   const handleSavePlatform = () => {
     if (!editingPlatform) return;
     setIsSaving(true);
@@ -244,6 +338,568 @@ export function PlatformsCatalogView({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleOpenDetail = (id: string) => {
+    setActiveId(id);
+    setViewMode("detail");
+  };
+
+  const handleBackToTable = () => {
+    setViewMode("table");
+  };
+
+  // ── TABLE VIEW ──────────────────────────────────────────────
+  const TableView = () => (
+    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 h-full flex flex-col">
+      {/* Table header bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <BarChart2 className="size-4 text-primary" />
+          <h2 className="text-base font-semibold">
+            Platforms & Sites
+          </h2>
+          <span className="text-[11px] font-mono text-muted-foreground ml-1">
+            ({filteredPlatforms.length})
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleLoadPresets}
+            className="text-xs h-8 border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <Sparkles className="size-3.5 mr-1" />
+            Load Presets
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => handleCreateNewPlatform()}
+            className="text-xs h-8"
+          >
+            <Plus className="size-3.5 mr-1" />
+            New Platform
+          </Button>
+        </div>
+      </div>
+
+      {/* Table scroll container */}
+      <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-xs">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[30px]">
+                #
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <Building className="size-3.5" />
+                  Platform
+                </span>
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="size-3.5" />
+                  Region
+                </span>
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                <span className="flex items-center gap-1.5">
+                  <Link2 className="size-3.5" />
+                  Website
+                </span>
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
+                <span className="flex items-center gap-1.5">
+                  <Percent className="size-3.5" />
+                  Commission
+                </span>
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="size-3.5" />
+                  Status
+                </span>
+              </th>
+              <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[90px]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPlatforms.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
+                  <Globe className="size-8 mx-auto mb-3 opacity-20" />
+                  <p>No platforms found</p>
+                  {(searchQuery || selectedRegion !== "all") && (
+                    <p className="text-xs mt-1 opacity-60">Try adjusting your filters</p>
+                  )}
+                </td>
+              </tr>
+            ) : (
+              filteredPlatforms.map((c, idx) => {
+                const parsed = parsePlatformConnector(c);
+                const isActive = c.id === activeId;
+                return (
+                  <tr
+                    key={c.id}
+                    className={cn(
+                      "border-b border-border/50 transition-colors group cursor-pointer",
+                      isActive
+                        ? "bg-primary/5"
+                        : "hover:bg-muted/40",
+                    )}
+                    onClick={() => handleOpenDetail(c.id)}
+                  >
+                    {/* # */}
+                    <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground/50">
+                      {idx + 1}
+                    </td>
+
+                    {/* Platform name + arabic name */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <Globe className="size-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate max-w-[160px]">
+                            {parsed.name}
+                          </div>
+                          {parsed.arabicName && (
+                            <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                              {parsed.arabicName}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Region */}
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <div className="flex items-center gap-1.5">
+                        <RegionIcon regionCode={parsed.regionCode} className="size-[14px]" />
+                        <span className="text-xs text-muted-foreground">
+                          {regionLabel(parsed.regionCode)}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Website */}
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {parsed.url && parsed.url !== "https://" ? (
+                        <a
+                          href={parsed.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-mono truncate max-w-[180px]"
+                        >
+                          {parsed.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
+                          <ExternalLink className="size-3 shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/40">—</span>
+                      )}
+                    </td>
+
+                    {/* Commission */}
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className="text-xs font-mono text-muted-foreground">
+                        {parsed.commission || "—"}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <StatusBadge status={parsed.status} />
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-7"
+                          title="View details"
+                          onClick={() => handleOpenDetail(c.id)}
+                        >
+                          <Eye className="size-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete"
+                          onClick={() => setPendingDeleteId(c.id)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer stats */}
+      {filteredPlatforms.length > 0 && (
+        <div className="flex items-center justify-between pt-3 text-[11px] text-muted-foreground font-mono">
+          <span>
+            {filteredPlatforms.filter((c) => parsePlatformConnector(c).status === "active").length} active
+            &nbsp;·&nbsp;
+            {filteredPlatforms.filter((c) => parsePlatformConnector(c).regionCode === "global").length} global
+            &nbsp;·&nbsp;
+            {filteredPlatforms.filter((c) => parsePlatformConnector(c).regionCode === "eg").length} eg
+            &nbsp;·&nbsp;
+            {filteredPlatforms.filter((c) => parsePlatformConnector(c).regionCode === "sa").length} sa
+          </span>
+          <span>{filteredPlatforms.length} total platforms</span>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── DETAIL VIEW ─────────────────────────────────────────────
+  const DetailView = () => {
+    if (!editingPlatform) {
+      return (
+        <div className="flex-1 flex items-center justify-center h-full text-muted-foreground">
+          Select a platform or create a new one to start editing.
+        </div>
+      );
+    }
+    return (
+      <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-8 h-full flex flex-col overflow-hidden">
+        {/* Back + actions header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleBackToTable}
+              className="h-8 text-xs px-2 text-muted-foreground hover:text-foreground"
+            >
+              <Table2 className="size-3.5 mr-1" />
+              All Platforms
+            </Button>
+            <ChevronRight className="size-3.5 text-muted-foreground/40" />
+            <div className="flex items-center gap-2">
+              <RegionIcon regionCode={editingPlatform.regionCode} className="size-5" />
+              <span className="text-base font-semibold">{editingPlatform.name}</span>
+              {editingPlatform.arabicName && (
+                <span className="text-xs text-muted-foreground">
+                  {editingPlatform.arabicName}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {editingPlatform.url && editingPlatform.url !== "https://" && (
+              <Button variant="outline" size="sm" asChild className="text-xs h-8 gap-1.5">
+                <a href={editingPlatform.url} target="_blank" rel="noreferrer">
+                  <ExternalLink className="size-3.5" />
+                  Visit Platform
+                </a>
+              </Button>
+            )}
+            {editingPlatform.myProfileUrl && (
+              <Button variant="secondary" size="sm" asChild className="text-xs h-8 gap-1.5">
+                <a href={editingPlatform.myProfileUrl} target="_blank" rel="noreferrer">
+                  <UserCheck className="size-3.5 text-emerald-500" />
+                  My Profile
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setPendingDeleteId(editingPlatform.id)}
+              className="text-xs h-8 gap-1.5"
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </Button>
+            <Button
+              onClick={handleSavePlatform}
+              disabled={isSaving}
+              size="sm"
+              className="text-xs h-8 gap-1.5"
+            >
+              <Save className="size-4" />
+              {isSaving ? "Saving..." : "Save Platform"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Form content */}
+        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
+          {/* Primary Info Card — table style */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/20">
+              <Building className="size-3.5 text-primary" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Platform Information &amp; Links
+              </span>
+            </div>
+
+            <div className="divide-y divide-border/50">
+              {/* Platform Name */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <Building className="size-3.5 shrink-0" />
+                  Platform Name
+                </div>
+                <div className="px-4 py-2.5 flex items-center">
+                  <Input
+                    type="text"
+                    value={editingPlatform.name}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, name: e.target.value })
+                    }
+                    className="font-medium border-transparent shadow-none focus-visible:ring-0 bg-transparent px-0 h-8"
+                    placeholder="e.g. Upwork, Fiverr, منصة صبار"
+                  />
+                </div>
+              </div>
+
+              {/* Location / Region */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <MapPin className="size-3.5 shrink-0" />
+                  Location / Region
+                </div>
+                <div className="px-4 py-2 flex items-center">
+                  <Select
+                    value={editingPlatform.region}
+                    onValueChange={(val) => {
+                      const region = val as ParsedPlatform["region"];
+                      const regionCode = region.includes("Saudi")
+                        ? "sa"
+                        : region.includes("Egypt")
+                        ? "eg"
+                        : "global";
+                      setEditingPlatform({ ...editingPlatform, region, regionCode });
+                    }}
+                  >
+                    <SelectTrigger className="w-full max-w-[240px] h-8 text-sm border-transparent shadow-none bg-transparent focus:ring-0">
+                      <div className="flex items-center gap-2">
+                        <RegionIcon regionCode={editingPlatform.regionCode} className="size-[14px]" />
+                        <SelectValue placeholder="Select region" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Global">
+                        <div className="flex items-center gap-2">
+                          <Globe className="size-3.5 text-sky-500" />
+                          Global
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Egypt">
+                        <div className="flex items-center gap-2">
+                          <RegionIcon regionCode="eg" className="size-[14px]" />
+                          Egypt
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Saudi Arabia">
+                        <div className="flex items-center gap-2">
+                          <RegionIcon regionCode="sa" className="size-[14px]" />
+                          Saudi Arabia
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Official Website URL */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <ExternalLink className="size-3.5 shrink-0" />
+                  Official Website URL
+                </div>
+                <div className="px-4 py-2.5 flex items-center gap-2">
+                  <Input
+                    type="url"
+                    value={editingPlatform.url}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, url: e.target.value })
+                    }
+                    className="flex-1 font-mono text-xs border-transparent shadow-none focus-visible:ring-0 bg-transparent px-0 h-8"
+                    placeholder="https://www.upwork.com"
+                  />
+                  {editingPlatform.url && editingPlatform.url !== "https://" && (
+                    <a
+                      href={editingPlatform.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 text-primary hover:text-primary/80"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* My Profile / Store URL */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <UserCheck className="size-3.5 shrink-0" />
+                  My Profile / Store URL
+                </div>
+                <div className="px-4 py-2.5 flex items-center gap-2">
+                  <Input
+                    type="url"
+                    value={editingPlatform.myProfileUrl || ""}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, myProfileUrl: e.target.value })
+                    }
+                    className="flex-1 font-mono text-xs border-transparent shadow-none focus-visible:ring-0 bg-transparent px-0 h-8"
+                    placeholder="e.g. https://www.upwork.com/freelancers/~0123abc"
+                  />
+                  {editingPlatform.myProfileUrl && (
+                    <a
+                      href={editingPlatform.myProfileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 text-emerald-500 hover:text-emerald-600"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Commission & Fees */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <Percent className="size-3.5 shrink-0" />
+                  Commission &amp; Fees
+                </div>
+                <div className="px-4 py-2.5 flex items-center">
+                  <Input
+                    type="text"
+                    value={editingPlatform.commission}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, commission: e.target.value })
+                    }
+                    className="font-mono text-xs border-transparent shadow-none focus-visible:ring-0 bg-transparent px-0 h-8"
+                    placeholder="10% Flat Fee, 0% Commission..."
+                  />
+                </div>
+              </div>
+
+              {/* Account Status */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <CheckCircle2 className="size-3.5 shrink-0" />
+                  Account Status
+                </div>
+                <div className="px-4 py-2 flex items-center">
+                  <Select
+                    value={editingPlatform.status}
+                    onValueChange={(val: any) =>
+                      setEditingPlatform({ ...editingPlatform, status: val })
+                    }
+                  >
+                    <SelectTrigger className="w-full max-w-[240px] h-8 text-sm border-transparent shadow-none bg-transparent focus:ring-0">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="size-3.5 text-emerald-500" />
+                          Active Account
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="top_rated">
+                        <div className="flex items-center gap-2">
+                          <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                          Top Rated / Pro
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="applied">
+                        <div className="flex items-center gap-2">
+                          <Clock className="size-3.5 text-blue-500" />
+                          Application Pending
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="exploring">
+                        <div className="flex items-center gap-2">
+                          <Search className="size-3.5 text-muted-foreground" />
+                          Exploring
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* What this platform is best for */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/20">
+              <BarChart2 className="size-3.5 text-primary" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                What This Platform Is Best For
+              </span>
+            </div>
+
+            <div className="divide-y divide-border/50">
+              {/* Best For */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground">
+                  <Star className="size-3.5 shrink-0" />
+                  Key Value Proposition
+                </div>
+                <div className="px-4 py-2.5">
+                  <Input
+                    value={editingPlatform.bestFor}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, bestFor: e.target.value })
+                    }
+                    className="text-sm font-medium border-transparent shadow-none focus-visible:ring-0 bg-transparent px-0 h-8"
+                    placeholder="e.g. Enterprise contracts, fast hourly shifts, packaged landing pages"
+                  />
+                </div>
+              </div>
+
+              {/* Platform Overview */}
+              <div className="grid grid-cols-[180px_1fr] sm:grid-cols-[220px_1fr]">
+                <div className="flex items-center gap-2 px-5 py-3 bg-muted/10 text-sm font-medium text-muted-foreground align-top">
+                  <MoreHorizontal className="size-3.5 shrink-0 mt-0.5" />
+                  Platform Overview &amp; Operating Notes
+                </div>
+                <div className="px-4 py-3">
+                  <TextArea
+                    value={editingPlatform.description}
+                    onChange={(e) =>
+                      setEditingPlatform({ ...editingPlatform, description: e.target.value })
+                    }
+                    rows={4}
+                    className="w-full resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none text-sm leading-relaxed bg-transparent"
+                    placeholder="Add notes about payment escrow, client expectations, proposal tips, or account requirements..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-[11px] text-muted-foreground font-mono pb-2">
+            Last updated: {new Date(editingPlatform.updatedAt).toLocaleString()}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -277,7 +933,37 @@ export function PlatformsCatalogView({
 
             <InnerSidebarDivider />
 
-            {/* Presets loader pill if missing */}
+            {/* View mode switcher */}
+            <div className="px-2 py-1.5 flex items-center gap-1.5 border-b border-border/40">
+              <button
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 h-7 rounded-lg text-xs transition-colors",
+                  viewMode === "table"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted/60"
+                )}
+              >
+                <Table2 className="size-3.5" />
+                Table
+              </button>
+              <button
+                onClick={() => activeId && setViewMode("detail")}
+                disabled={!activeId}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 h-7 rounded-lg text-xs transition-colors",
+                  viewMode === "detail"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted/60",
+                  !activeId && "opacity-40 cursor-not-allowed"
+                )}
+              >
+                <LayoutGrid className="size-3.5" />
+                Detail
+              </button>
+            </div>
+
+            {/* Presets loader pill */}
             {uniquePlatformConnectors.length < 22 && (
               <div className="p-2 border-b border-border/40 bg-primary/5">
                 <Button
@@ -315,28 +1001,28 @@ export function PlatformsCatalogView({
                 filteredPlatforms.map((c) => {
                   const parsed = parsePlatformConnector(c);
                   const isSelected = c.id === activeId;
-                  const flag = getPlatformFlag(parsed.regionCode);
-
                   return (
                     <InnerSidebarItem
                       key={c.id}
                       active={isSelected}
-                      onClick={() => setActiveId(c.id)}
+                      onClick={() => {
+                        setActiveId(c.id);
+                        if (viewMode === "detail") setViewMode("detail");
+                      }}
                       onDelete={() => setPendingDeleteId(c.id)}
                     >
                       <div className="flex items-center gap-2.5 w-full min-w-0">
-                        <span className="text-sm shrink-0">{flag}</span>
+                        <RegionIcon regionCode={parsed.regionCode} className="size-[14px] shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-xs truncate">
-                            {parsed.name}
-                          </div>
+                          <div className="font-medium text-xs truncate">{parsed.name}</div>
                           <div className="truncate text-[10px] text-muted-foreground mt-0.5">
-                            {parsed.arabicName || parsed.region}
+                            {parsed.arabicName || regionLabel(parsed.regionCode)}
                           </div>
                           <div className="text-[9px] text-muted-foreground/60 mt-0.5 font-mono">
                             {parsed.commission}
                           </div>
                         </div>
+                        <StatusBadge status={parsed.status} />
                       </div>
                     </InnerSidebarItem>
                   );
@@ -351,253 +1037,8 @@ export function PlatformsCatalogView({
           </InnerSidebar>
         }
       >
-        {/* Main Content Area */}
-        {editingPlatform ? (
-          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-10 h-full flex flex-col overflow-hidden">
-            {/* Top Action Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{getPlatformFlag(editingPlatform.regionCode)}</span>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-semibold capitalize">
-                    {editingPlatform.name} Details
-                  </h2>
-                  {editingPlatform.arabicName && (
-                    <p className="text-xs text-muted-foreground mt-0.5 font-normal">
-                      {editingPlatform.arabicName}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                {editingPlatform.url && editingPlatform.url !== "https://" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="flex items-center gap-1.5 text-xs h-9"
-                  >
-                    <a
-                      href={editingPlatform.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink className="size-3.5" /> Visit Platform ↗
-                    </a>
-                  </Button>
-                )}
-
-                {editingPlatform.myProfileUrl && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    asChild
-                    className="flex items-center gap-1.5 text-xs h-9"
-                  >
-                    <a
-                      href={editingPlatform.myProfileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <UserCheck className="size-3.5 text-emerald-500" /> My Profile ↗
-                    </a>
-                  </Button>
-                )}
-
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setPendingDeleteId(editingPlatform.id)}
-                  className="flex items-center gap-1.5 text-xs h-9"
-                >
-                  <Trash2 className="size-3.5" /> Delete
-                </Button>
-
-                <Button
-                  onClick={handleSavePlatform}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 text-xs h-9"
-                >
-                  <Save className="size-4" /> {isSaving ? "Saving..." : "Save Details"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Form & Notes Content */}
-            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
-              {/* Form Card */}
-              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-4">
-                {/* Platform Name */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <Building className="size-4" /> Platform Name:
-                  </span>
-                  <Input
-                    type="text"
-                    value={editingPlatform.name}
-                    onChange={(e) =>
-                      setEditingPlatform({ ...editingPlatform, name: e.target.value })
-                    }
-                    className="flex-1 font-medium"
-                    placeholder="e.g. Upwork, Fiverr, منصة صبار"
-                  />
-                </div>
-
-                {/* Location / Region (Reusable Select) */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <MapPin className="size-4" /> Location / Region:
-                  </span>
-                  <div className="flex-1">
-                    <Select
-                      value={editingPlatform.region}
-                      onValueChange={(val) => {
-                        const region = val as any;
-                        const regionCode = region.includes("Saudi")
-                          ? "sa"
-                          : region.includes("Egypt")
-                          ? "eg"
-                          : "global";
-                        setEditingPlatform({ ...editingPlatform, region, regionCode });
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Global 🌐">Global 🌐</SelectItem>
-                        <SelectItem value="Egypt 🇪🇬">Egypt 🇪🇬</SelectItem>
-                        <SelectItem value="Saudi Arabia 🇸🇦">Saudi Arabia 🇸🇦</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Website URL */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <ExternalLink className="size-4" /> Website URL:
-                  </span>
-                  <Input
-                    type="url"
-                    value={editingPlatform.url}
-                    onChange={(e) =>
-                      setEditingPlatform({ ...editingPlatform, url: e.target.value })
-                    }
-                    className="flex-1 font-mono text-xs"
-                    placeholder="https://www.upwork.com"
-                  />
-                </div>
-
-                {/* My Profile Link */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <UserCheck className="size-4" /> My Profile Link:
-                  </span>
-                  <Input
-                    type="url"
-                    value={editingPlatform.myProfileUrl || ""}
-                    onChange={(e) =>
-                      setEditingPlatform({
-                        ...editingPlatform,
-                        myProfileUrl: e.target.value,
-                      })
-                    }
-                    className="flex-1 font-mono text-xs"
-                    placeholder="https://www.upwork.com/freelancers/~0123"
-                  />
-                </div>
-
-                {/* Commission & Fees */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <Percent className="size-4" /> Commission & Fees:
-                  </span>
-                  <Input
-                    type="text"
-                    value={editingPlatform.commission}
-                    onChange={(e) =>
-                      setEditingPlatform({
-                        ...editingPlatform,
-                        commission: e.target.value,
-                      })
-                    }
-                    className="flex-1"
-                    placeholder="10% Flat Fee, 0% Commission..."
-                  />
-                </div>
-
-                {/* Account Status (Reusable Select) */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
-                    <CheckCircle2 className="size-4" /> Account Status:
-                  </span>
-                  <div className="flex-1">
-                    <Select
-                      value={editingPlatform.status}
-                      onValueChange={(val: any) =>
-                        setEditingPlatform({ ...editingPlatform, status: val })
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active Account ✅</SelectItem>
-                        <SelectItem value="top_rated">Top Rated / Pro ⭐</SelectItem>
-                        <SelectItem value="applied">Application Pending ⏳</SelectItem>
-                        <SelectItem value="exploring">Exploring 🔍</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes & Details Card */}
-              <div className="flex-1 bg-card border border-border rounded-lg p-6 flex flex-col gap-4 min-h-[220px]">
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground mb-1.5 block">
-                    Best For & Key Value:
-                  </span>
-                  <Input
-                    value={editingPlatform.bestFor}
-                    onChange={(e) =>
-                      setEditingPlatform({ ...editingPlatform, bestFor: e.target.value })
-                    }
-                    className="text-sm font-medium"
-                    placeholder="e.g. Enterprise contracts, fast hourly shifts, packaged landing pages"
-                  />
-                </div>
-
-                <div className="flex-1 flex flex-col">
-                  <span className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Notes & Details:
-                  </span>
-                  <TextArea
-                    value={editingPlatform.description}
-                    onChange={(e) =>
-                      setEditingPlatform({
-                        ...editingPlatform,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full flex-1 resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none text-sm leading-relaxed bg-transparent min-h-[100px]"
-                    placeholder="Add notes about payment escrow, client expectations, proposal tips, or account requirements..."
-                  />
-                </div>
-
-                <div className="pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground font-mono">
-                  <span>Last updated: {new Date(editingPlatform.updatedAt).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center h-full text-muted-foreground">
-            Select a platform or create a new one to start editing.
-          </div>
-        )}
+        {/* Main Content Area — Table or Detail */}
+        {viewMode === "table" ? <TableView /> : <DetailView />}
       </SplitLayout>
 
       {/* Delete Confirmation Dialog */}
