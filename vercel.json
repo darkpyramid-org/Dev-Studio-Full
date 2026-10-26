@@ -23,15 +23,20 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/(api|api-docs|docs|swagger|swagger\\.json)(/.*)?",
       "dest": "backend/src/index.ts"
     },
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/frontend/dist/assets/$1"
+    },
+    {
+      "src": "/((?!api/|api-docs/|docs/|swagger).+\\.[a-zA-Z0-9]+)$",
+      "dest": "/frontend/dist/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/frontend/dist/index.html"
     }
   ]
 }
