@@ -26,19 +26,38 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy via Vercel CLI
+      - name: Check for Vercel Token
+        id: check_token
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "ℹ️  VERCEL_TOKEN is not configured in GitHub Secrets."
-            echo "   If your repository is connected directly via the Vercel Dashboard, deployments occur automatically on git push."
-            echo "   To manage deployments via this workflow, add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID."
-            exit 0
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  VERCEL_TOKEN is not set in GitHub Secrets."
+            echo "   Vercel auto-deploys via the Dashboard git integration on every push."
+            echo "   Add VERCEL_TOKEN to GitHub Secrets to enable workflow-controlled deploys."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
           fi
-          npm install -g vercel
-          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to Vercel
+        if: steps.check_token.outputs.configured == 'true'
+        run: |
+          npm install -g vercel@latest
+
+          # If org/project IDs are available, link first for explicit project targeting.
+          # Otherwise, vercel deploy auto-discovers the project from vercel.json.
+          if [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "Linking project via VERCEL_ORG_ID / VERCEL_PROJECT_ID..."
+            vercel link --yes \
+              --token=${{ secrets.VERCEL_TOKEN }} \
+              --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --project=${{ secrets.VERCEL_PROJECT_ID }}
+          fi
+
+          echo "Deploying to production..."
+          vercel deploy --prod --yes \
+            --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          # Optional — only needed for explicit project linking
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
