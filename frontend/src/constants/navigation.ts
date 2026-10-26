@@ -165,6 +165,7 @@ export const CONNECTORS_TABS: ConnectorTab[] = [
   { id: "clients", label: "Clients", icon: CONNECTOR_TYPE_ICONS.clients },
   { id: "freelance", label: "Freelance", icon: CONNECTOR_TYPE_ICONS.freelance },
   { id: "services", label: "Services", icon: CONNECTOR_TYPE_ICONS.services },
+  { id: "platforms", label: "Sites & Platforms", icon: CONNECTOR_TYPE_ICONS.platforms },
 ] as const;
 
 // ── CV Builder Tabs ────────────────────────────────────────────────────────────

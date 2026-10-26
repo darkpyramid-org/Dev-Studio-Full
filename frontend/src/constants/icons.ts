@@ -232,6 +232,7 @@ export const CONNECTOR_TYPE_ICONS = {
   clients: Users,
   freelance: Laptop,
   services: Wrench,
+  platforms: Globe,
 } as const;
 
 // ── CV Builder Section Icons ───────────────────────────────────────────────────

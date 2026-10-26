@@ -241,6 +241,7 @@ export const CONNECTOR_TYPES = [
   "clients",
   "freelance",
   "services",
+  "platforms",
 ] as const;
 export type ConnectorType = (typeof CONNECTOR_TYPES)[number];
 

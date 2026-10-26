@@ -7,6 +7,7 @@ import { useForge, newId } from "@/lib/store";
 import { ConnectorsSidebar } from "@/features/connectors/connectors-sidebar";
 import { ConnectorEditor } from "@/components/crud/connectors";
 import { ServicesCatalogView } from "@/features/connectors/services-catalog-view";
+import { PlatformsCatalogView } from "@/features/connectors/platforms-catalog-view";
 import type { Connector } from "@/types/tools";
 import { CONNECTORS_TABS } from "@/constants";
 import { ConnectorType } from "@shared/enums";
@@ -110,7 +111,13 @@ function ConnectorsPage() {
       </PageSection>
 
       <div className="flex-1 min-h-0 overflow-hidden">
-        {tab === "services" ? (
+        {tab === "platforms" ? (
+          <PlatformsCatalogView
+            connectors={connectors}
+            onUpsert={upsertConnector}
+            onDelete={deleteConnector}
+          />
+        ) : tab === "services" ? (
           <ServicesCatalogView
             connectors={connectors}
             onUpsert={upsertConnector}
