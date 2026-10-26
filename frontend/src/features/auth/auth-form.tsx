@@ -51,9 +51,18 @@ export function AuthForm() {
         credentials: "include",
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          setError(text.trim() || `Server error (${res.status})`);
+          return;
+        }
+      }
 
-      if (data.requireVerification) {
+      if (data?.requireVerification) {
         setVerifyEmail(data.email);
         setDevCodeHint(data.devVerificationCode ?? null);
         setStep("verify");
@@ -63,13 +72,13 @@ export function AuthForm() {
       }
 
       if (!res.ok) {
-        setError(data.error ?? "Something went wrong");
+        setError(data?.error ?? data?.message ?? "Authentication failed");
         return;
       }
       await refresh();
       navigate({ to: "/" });
-    } catch {
-      setError("Could not connect to the server");
+    } catch (err) {
+      setError((err as Error)?.message || "Could not connect to the server");
     } finally {
       setLoading(false);
     }
@@ -87,15 +96,24 @@ export function AuthForm() {
         credentials: "include",
         body: JSON.stringify({ email: verifyEmail, code: verificationCode }),
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          setError(text.trim() || `Server error (${res.status})`);
+          return;
+        }
+      }
       if (!res.ok) {
-        setError(data.error ?? "Verification failed");
+        setError(data?.error ?? data?.message ?? "Verification failed");
         return;
       }
       await refresh();
       navigate({ to: "/" });
-    } catch {
-      setError("Could not connect to the server");
+    } catch (err) {
+      setError((err as Error)?.message || "Could not connect to the server");
     } finally {
       setVerifyLoading(false);
     }
@@ -111,15 +129,24 @@ export function AuthForm() {
         credentials: "include",
         body: JSON.stringify({ email: verifyEmail }),
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          setError(text.trim() || `Server error (${res.status})`);
+          return;
+        }
+      }
       if (!res.ok) {
-        setError(data.error ?? "Failed to resend verification code");
+        setError(data?.error ?? data?.message ?? "Failed to resend verification code");
         return;
       }
-      setDevCodeHint(data.devVerificationCode ?? null);
+      setDevCodeHint(data?.devVerificationCode ?? null);
       setSuccessMessage("Verification code resent successfully!");
-    } catch {
-      setError("Could not connect to the server");
+    } catch (err) {
+      setError((err as Error)?.message || "Could not connect to the server");
     }
   };
 

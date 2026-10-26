@@ -19,4 +19,11 @@ interface SkillAreasData {
   soft: RawSkillArea;
 }
 
-export const skillAreasData: SkillAreasData = require("./skill-areas.json");
+let loadedData: SkillAreasData = { tech: {}, soft: { id: "soft", label: "Soft Skills", description: "", concepts: [], resources: [], checklist: [] } };
+try {
+  loadedData = require("./skill-areas.json");
+} catch (err) {
+  console.warn("[skill-areas] Warning: Could not load skill-areas.json, using fallback", err);
+}
+
+export const skillAreasData: SkillAreasData = loadedData;
