@@ -37,6 +37,8 @@ export function usePresence(userId: string | null | undefined): UsePresenceResul
   const connect = useCallback(() => {
     if (!userId) return;
     if (!mountedRef.current) return;
+    // Vercel serverless doesn't support persistent WebSockets
+    if (typeof window !== "undefined" && window.location.hostname.endsWith("vercel.app")) return;
     if (attemptsRef.current >= MAX_RECONNECT_ATTEMPTS) return;
 
     const ws = new WebSocket(getWsUrl());

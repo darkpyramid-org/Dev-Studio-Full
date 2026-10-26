@@ -53,6 +53,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       })
-    )
+    ).catch(() => fetch(request).catch(() => new Response("Offline", { status: 503 })))
   );
 });

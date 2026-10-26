@@ -5,7 +5,7 @@ import {
   MAIL_CHANNELS,
 } from "../../domain/enums.js";
 
-const uuidOptional = z.string().uuid().optional();
+const uuidOptional = z.string().optional();
 const tagsArray = z.array(z.string()).default([]);
 
 // ── Connector ─────────────────────────────────────────────────────────────────
