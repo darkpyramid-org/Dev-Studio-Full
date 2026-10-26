@@ -14,8 +14,9 @@ import type { UsePresenceResult } from "@/types/common";
 export type { UsePresenceResult };
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
-const RECONNECT_DELAY_MS = 3_000;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY_MS = 5_000;
+// Vercel serverless doesn't support WebSockets — limit retries to avoid console spam
+const MAX_RECONNECT_ATTEMPTS = typeof window !== "undefined" && window.location.protocol === "https:" ? 1 : 5;
 
 function getWsUrl(): string {
   const loc = window.location;

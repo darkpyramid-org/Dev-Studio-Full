@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { requireUser } from "../middleware/auth.js";
 import { connectorsService } from "../../infrastructure/di/container.js";
+import { logger } from "../../infrastructure/lib/logger.js";
 
 export const getAll = async (req: Request, res: Response) => {
   const uid = requireUser(req, res);
@@ -9,7 +10,8 @@ export const getAll = async (req: Request, res: Response) => {
     const data = await connectorsService.getAll(uid);
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch connectors" });
+    logger.error("[connectors] getAll error", { error, uid });
+    res.status(500).json({ error: "Failed to fetch connectors", detail: (error as Error)?.message });
   }
 };
 
@@ -20,7 +22,8 @@ export const create = async (req: Request, res: Response) => {
     const result = await connectorsService.upsert(uid, req.body);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create connector" });
+    logger.error("[connectors] create error", { error, uid, body: req.body });
+    res.status(500).json({ error: "Failed to create connector", detail: (error as Error)?.message });
   }
 };
 
@@ -32,7 +35,8 @@ export const createBulk = async (req: Request, res: Response) => {
     const result = await connectorsService.upsertBulk(uid, items);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create bulk connectors" });
+    logger.error("[connectors] createBulk error", { error, uid, count: Array.isArray(req.body) ? req.body.length : 0 });
+    res.status(500).json({ error: "Failed to create bulk connectors", detail: (error as Error)?.message });
   }
 };
 
@@ -44,6 +48,7 @@ export const deleteById = async (req: Request, res: Response) => {
     await connectorsService.deleteById(uid, id);
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete connector" });
+    logger.error("[connectors] deleteById error", { error, uid, id: req.params.id });
+    res.status(500).json({ error: "Failed to delete connector", detail: (error as Error)?.message });
   }
 };

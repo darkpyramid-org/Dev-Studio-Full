@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader, PageContainer, PageSection, TabNav, SplitLayout } from "@/components/layout";
 import { Users } from "lucide-react";
 import { z } from "zod";
@@ -29,7 +29,11 @@ function ConnectorsPage() {
 
   const { connectors, upsertConnector, deleteConnector } = useForge();
   const [activeConnectorId, setActiveConnectorId] = useState<string | null>(null);
+  // Local edit state — tracks uncommitted field changes without firing API calls per keystroke
+  const [localEdits, setLocalEdits] = useState<Partial<Connector>>({});
+  const prevActiveId = useRef<string | null>(null);
 
+  // Auto-select first connector when switching tabs or after list changes
   useEffect(() => {
     const tabConnectors = connectors.filter((c) => c.type === tab);
     if (tabConnectors.length > 0 && !tabConnectors.some((c) => c.id === activeConnectorId)) {
@@ -38,6 +42,14 @@ function ConnectorsPage() {
       setActiveConnectorId(null);
     }
   }, [tab, connectors, activeConnectorId]);
+
+  // Clear local edits when switching between connectors
+  useEffect(() => {
+    if (prevActiveId.current !== activeConnectorId) {
+      setLocalEdits({});
+      prevActiveId.current = activeConnectorId;
+    }
+  }, [activeConnectorId]);
 
   const handleNewConnector = () => {
     const next: Connector = {
@@ -50,17 +62,29 @@ function ConnectorsPage() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
+    // Save new connector to backend immediately
     upsertConnector(next);
     setActiveConnectorId(next.id);
+    setLocalEdits({});
   };
 
+  // Only update local React state — no API call on each keystroke
   const handleUpdateConnector = (updates: Partial<Connector>) => {
+    setLocalEdits((prev) => ({ ...prev, ...updates }));
+  };
+
+  // Explicit save — merges local edits into store and fires the API call once
+  const handleSaveConnector = () => {
     const current = connectors.find((c) => c.id === activeConnectorId);
     if (!current) return;
-    upsertConnector({ ...current, ...updates, updatedAt: Date.now() });
+    const merged = { ...current, ...localEdits, updatedAt: Date.now() };
+    upsertConnector(merged);
+    setLocalEdits({});
   };
 
-  const activeConnector = connectors.find((c) => c.id === activeConnectorId) || null;
+  const storedConnector = connectors.find((c) => c.id === activeConnectorId) || null;
+  // Show the editor with local edits overlaid on the stored data
+  const activeConnector = storedConnector ? { ...storedConnector, ...localEdits } : null;
 
   return (
     <PageContainer>
@@ -95,7 +119,7 @@ function ConnectorsPage() {
               type={tab}
               activeConnector={activeConnector}
               onUpdateConnector={handleUpdateConnector}
-              onSave={() => {}}
+              onSave={handleSaveConnector}
             />
           </div>
         </SplitLayout>
