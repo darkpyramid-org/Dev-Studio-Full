@@ -18,14 +18,13 @@ router.post("/agent-chat", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "messages array is required" });
   }
 
-  const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
-  const baseUrl =
-    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? "https://api.openai.com/v1";
+  const apiKey = process.env.OPENAI_API_KEY;
+  const baseUrl = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
 
   if (!apiKey) {
     return res.status(503).json({
       error:
-        "OpenAI API key not configured. Set AI_INTEGRATIONS_OPENAI_API_KEY in your environment.",
+        "OpenAI API key not configured. Set OPENAI_API_KEY in your environment.",
     });
   }
 

@@ -12,7 +12,7 @@ The table below outlines which versions of Dev Studio are currently receiving se
 | Version                    | Status        | Security Support                                                                   |
 | -------------------------- | ------------- | ---------------------------------------------------------------------------------- |
 | **v1.x.x (Local Stack)**   | 🟢 Active     | Fully supported. Active security patches are applied directly.                     |
-| **v0.9.x (Legacy Replit)** | 🔴 Deprecated | No longer supported. We recommend upgrading to the modern local stack immediately. |
+| **v0.9.x (Legacy)**        | 🔴 Deprecated | No longer supported. We recommend upgrading to the modern local stack immediately. |
 
 ---
 

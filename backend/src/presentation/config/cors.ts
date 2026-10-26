@@ -2,17 +2,12 @@ import cors from "cors";
 
 const isProd = process.env.NODE_ENV === "production";
 
-const replitDomain = process.env.REPLIT_DEV_DOMAIN
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-  : null;
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5000",
   "http://127.0.0.1:5173",
   "https://dev-studio-full.vercel.app",
   process.env.FRONTEND_URL,
-  replitDomain,
 ].filter(Boolean) as string[];
 
 export const corsOptions = cors({
@@ -20,8 +15,7 @@ export const corsOptions = cors({
     if (!origin) return callback(null, true);
     if (
       allowedOrigins.includes(origin) ||
-      !isProd ||
-      (origin && origin.endsWith(".replit.dev"))
+      !isProd
     ) {
       callback(null, true);
     } else {
