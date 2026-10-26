@@ -1,4 +1,4 @@
-import { ElementType } from "react";
+import type { ElementType } from "react";
 import type { TechAreaId, ServiceCategory } from "@shared/enums";
 
 export type { TechAreaId, ServiceCategory };
@@ -138,5 +138,5 @@ export type SectionId = "overview" | "interview" | "resources" | "services";
 export interface SubAreaTab {
   id: string;
   label: string;
-  icon?: React.ElementType;
+  icon?: ElementType;
 }

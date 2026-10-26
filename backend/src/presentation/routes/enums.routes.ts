@@ -18,6 +18,8 @@ import {
   NOTIFICATION_TYPES,
   ACTIVITY_ACTIONS,
   ACTIVITY_ENTITY_TYPES,
+  ACTIVITY_TYPES,
+  CURRENCIES,
   CONNECTOR_TYPES,
   SOCIAL_PLATFORMS,
   MAIL_CHANNELS,
@@ -109,7 +111,9 @@ router.get("/", (_req, res) => {
     activity: {
       ACTIVITY_ACTIONS,
       ACTIVITY_ENTITY_TYPES,
+      ACTIVITY_TYPES,
     },
+    currencies: CURRENCIES,
   });
 });
 

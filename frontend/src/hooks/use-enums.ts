@@ -40,6 +40,8 @@ import {
   NOTIFICATION_TYPES,
   ACTIVITY_ACTIONS,
   ACTIVITY_ENTITY_TYPES,
+  ACTIVITY_TYPES,
+  CURRENCIES,
 } from "@shared/enums";
 
 const FALLBACK: AppEnums = {
@@ -73,7 +75,8 @@ const FALLBACK: AppEnums = {
   core: { AGENT_STATUSES, ASSET_KINDS },
   integrations: { CONNECTOR_TYPES, SOCIAL_PLATFORMS, MAIL_CHANNELS },
   notifications: { NOTIFICATION_TYPES },
-  activity: { ACTIVITY_ACTIONS, ACTIVITY_ENTITY_TYPES },
+  activity: { ACTIVITY_ACTIONS, ACTIVITY_ENTITY_TYPES, ACTIVITY_TYPES },
+  currencies: CURRENCIES,
 };
 
 export function useEnums() {

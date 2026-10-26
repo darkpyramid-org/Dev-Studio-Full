@@ -179,6 +179,10 @@ describe("POST /api/auth/logout — complete API flow", () => {
     const res = await request(buildApp()).post("/api/auth/logout");
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ ok: true });
+    const setCookie = res.headers["set-cookie"] as string[] | string;
+    const cookieStr = Array.isArray(setCookie) ? setCookie.join(";") : (setCookie ?? "");
+    expect(cookieStr).toMatch(/ds_token=/);
+    expect(cookieStr).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/i);
   });
 });
 

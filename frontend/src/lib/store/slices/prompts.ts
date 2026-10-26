@@ -13,9 +13,13 @@ export const createPromptSlice: StateCreator<
     label: "Prompt",
     getList: (s) => s.prompts,
     setList: (list) => ({ prompts: list }),
-    apiUpsert: (p) =>
-      db.upsertPrompt({ ...p, usage_count: p.usageCount, user_id: "" } as any),
+    apiUpsert: db.upsertPrompt,
     apiDelete: db.deletePrompt,
+    toPayload: ({ usageCount, ...prompt }) => ({
+      ...prompt,
+      usage_count: usageCount,
+      user_id: "",
+    }),
   });
 
   return {

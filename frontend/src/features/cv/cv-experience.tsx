@@ -132,10 +132,7 @@ export function CVExperienceSection({ data, onChange }: CVExperienceProps) {
                       <Checkbox
                         checked={exp.current}
                         onCheckedChange={(checked) =>
-                          update(exp.id, {
-                            current: !!checked,
-                            end: checked ? "Present" : "",
-                          })
+                          update(exp.id, { current: !!checked })
                         }
                       />
                       Current

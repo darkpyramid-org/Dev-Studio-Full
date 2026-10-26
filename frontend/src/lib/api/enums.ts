@@ -26,6 +26,8 @@ import type {
   NotificationType,
   ActivityAction,
   ActivityEntityType,
+  ActivityType,
+  Currency,
 } from "@shared/enums";
 import type { JobCategory, OfferCategory, FreelanceServiceCategory } from "@shared/enums";
 
@@ -90,7 +92,9 @@ export interface AppEnums {
   activity: {
     ACTIVITY_ACTIONS: readonly ActivityAction[];
     ACTIVITY_ENTITY_TYPES: readonly ActivityEntityType[];
+    ACTIVITY_TYPES: readonly ActivityType[];
   };
+  currencies: readonly Currency[];
 }
 
 export async function getEnums(): Promise<AppEnums> {

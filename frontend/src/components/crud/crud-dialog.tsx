@@ -17,6 +17,8 @@ interface CrudDialogProps {
   saveLabel?: string;
   cancelLabel?: string;
   saving?: boolean;
+  /** onSave owns error reporting; the dialog closes after it resolves when closeOnSuccess is true. */
+  closeOnSuccess?: boolean;
   children: React.ReactNode;
 }
 
@@ -29,6 +31,7 @@ export function CrudDialog({
   saveLabel = "Save",
   cancelLabel = "Cancel",
   saving = false,
+  closeOnSuccess = true,
   children,
 }: CrudDialogProps) {
   const handleCancel = () => {
@@ -38,6 +41,7 @@ export function CrudDialog({
 
   const handleSave = async () => {
     await onSave();
+    if (closeOnSuccess) onOpenChange(false);
   };
 
   return (

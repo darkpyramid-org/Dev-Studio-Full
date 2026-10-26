@@ -1,4 +1,4 @@
-import { ElementType } from "react";
+import type { ElementType } from "react";
 import type { SoftAreaId } from "@shared/enums";
 import { FocusArea, Difficulty, AnswerDepth } from "../common";
 import { SkillConcept, SkillResource, SkillChecklistItem } from "./tech-skills";
@@ -74,7 +74,7 @@ export interface SoftSkillAreaData {
 export interface SoftSkillGroupItem {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: ElementType;
 }
 
 export interface SoftSkillGroups {

@@ -4,19 +4,19 @@ import type { ForgeState } from "./types";
 type SetState = (partial: Partial<ForgeState> | ((s: ForgeState) => Partial<ForgeState>)) => void;
 type GetState = () => ForgeState;
 
-interface CrudConfig<T extends { id: string }> {
+interface CrudConfig<T extends { id: string }, Payload = T> {
   label: string;
   getList: (state: ForgeState) => T[];
   setList: (list: T[]) => Partial<ForgeState>;
-  apiUpsert: (item: T) => Promise<T>;
+  apiUpsert: (item: Payload) => Promise<T>;
   apiDelete: (id: string) => Promise<void>;
-  toPayload?: (item: T) => unknown;
+  toPayload?: (item: T) => Payload;
 }
 
-export function createCrudActions<T extends { id: string }>(
+export function createCrudActions<T extends { id: string }, Payload = T>(
   set: SetState,
   get: GetState,
-  config: CrudConfig<T>,
+  config: CrudConfig<T, Payload>,
 ) {
   const { label, getList, setList, apiUpsert, apiDelete, toPayload } = config;
 
@@ -30,7 +30,7 @@ export function createCrudActions<T extends { id: string }>(
       ),
     );
     try {
-      const payload = toPayload ? (toPayload(item) as T) : item;
+      const payload = toPayload ? toPayload(item) : (item as unknown as Payload);
       const saved = await apiUpsert(payload);
       if (saved?.id && saved.id !== item.id) {
         set((s) =>
@@ -47,14 +47,15 @@ export function createCrudActions<T extends { id: string }>(
   async function remove(id: string): Promise<void> {
     const previous = getList(get());
     set((s) => setList(getList(s).filter((x) => x.id !== id)));
-    toast.promise(apiDelete(id), {
-      loading: `Deleting ${label.toLowerCase()}...`,
-      success: `${label} deleted!`,
-      error: (err) => {
-        set(setList(previous));
-        return `Failed to delete: ${(err as Error).message}`;
-      },
-    });
+    try {
+      await toast.promise(apiDelete(id), {
+        loading: `Deleting ${label.toLowerCase()}...`,
+        success: `${label} deleted!`,
+        error: (err) => `Failed to delete: ${(err as Error).message}`,
+      });
+    } catch {
+      set(setList(previous));
+    }
   }
 
   return { upsert, remove };

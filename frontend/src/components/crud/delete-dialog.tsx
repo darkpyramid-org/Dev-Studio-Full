@@ -1,3 +1,4 @@
+import { useState, type MouseEvent } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +27,18 @@ export function DeleteDialog({
   description = "This action cannot be undone.",
   confirmLabel = "Delete",
 }: DeleteDialogProps) {
-  const handleConfirm = async () => {
-    await onConfirm();
-    onOpenChange(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleConfirm = async (event: MouseEvent<HTMLButtonElement>) => {
+    // AlertDialogAction closes itself after click unless its default is prevented.
+    event.preventDefault();
+    setDeleting(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -42,6 +52,7 @@ export function DeleteDialog({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
+            disabled={deleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {confirmLabel}

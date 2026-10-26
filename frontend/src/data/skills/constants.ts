@@ -61,7 +61,8 @@ export interface SoftSkillCategory {
   [category: string]: SoftSkillItem[];
 }
 
-// ── Soft skill groups — same IDs as backend, adds React icons for UI ───────────
+// ── UI mirror of backend SOFT_SKILL_GROUPS; IDs and labels must stay in sync.
+// This layer adds React icons, which cannot live in the backend's shared constants.
 
 export const SOFT_SKILL_GROUPS: Record<string, SoftSkillItem[]> = {
   leadership: [
