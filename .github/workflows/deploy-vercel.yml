@@ -49,20 +49,20 @@ jobs:
           TEAM_JSON=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v2/teams?limit=100")
           PROJECT_JSON=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=100")
 
-          # Team: match the secret as slug, else fall back to the (single) team,
+          # Team: match by slug, then by ID; else fall back to the (single) team,
           # else empty → the CLI's default (personal) scope is used.
-          TEAM_ID=$(echo "$TEAM_JSON" | jq -r '.teams[] | select(.slug == env.VERCEL_ORG_ID) | .id' | head -n1)
+          TEAM_ID=$(echo "$TEAM_JSON" | jq -r '.teams[] | select(.slug == env.VERCEL_ORG_SLUG or .id == env.VERCEL_ORG_SLUG) | .id' | head -n1)
           if [ -z "$TEAM_ID" ]; then
             TEAM_ID=$(echo "$TEAM_JSON" | jq -r '.teams[0].id // empty')
           fi
           echo "Resolved team: ${TEAM_ID:-<default personal scope>}"
 
-          # Project: match by name against the default scope, then the team scope.
-          PROJECT_ID=$(echo "$PROJECT_JSON" | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_ID) | .id' | head -n1)
+          # Project: match by name or ID against the default scope, then the team scope.
+          PROJECT_ID=$(echo "$PROJECT_JSON" | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_NAME or .id == env.VERCEL_PROJECT_NAME) | .id' | head -n1)
           if [ -z "$PROJECT_ID" ] && [ -n "$TEAM_ID" ]; then
             PROJECT_ID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v9/projects?teamId=$TEAM_ID&limit=100" \
-              | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_ID) | .id' | head -n1)
+              | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_NAME or .id == env.VERCEL_PROJECT_NAME) | .id' | head -n1)
           fi
           echo "Resolved project: ${PROJECT_ID:-<not found>}"
 
@@ -73,7 +73,7 @@ jobs:
               --scope="$TEAM_ID" \
               --project="$PROJECT_ID"
           else
-            echo "⚠️  Could not resolve project '$VERCEL_PROJECT_ID' — check the secrets."
+            echo "⚠️  Could not resolve project '$VERCEL_PROJECT_NAME' — check the secrets."
             vercel link --yes --token="$VERCEL_TOKEN"
           fi
 
@@ -81,6 +81,7 @@ jobs:
           vercel deploy --prod --yes --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          # Used as the matching name for team/project resolution (slug or name)
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          # Renamed on purpose: the CLI auto-reads VERCEL_ORG_ID / VERCEL_PROJECT_ID
+          # env vars and would override/conflict with the resolved IDs above.
+          VERCEL_ORG_SLUG: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_ID }}
