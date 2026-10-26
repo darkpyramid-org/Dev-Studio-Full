@@ -43,21 +43,90 @@ jobs:
         run: |
           npm install -g vercel@latest
 
-          # If org/project IDs are available, link first for explicit project targeting.
-          # Otherwise, vercel deploy auto-discovers the project from vercel.json.
-          if [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "Linking project via VERCEL_ORG_ID / VERCEL_PROJECT_ID..."
+          # ── Resolve the correct team & project IDs via the Vercel REST API ──
+          # This makes linking immune to stale or mistyped VERCEL_ORG_ID /
+          # VERCEL_PROJECT_ID secret values (e.g. a slug instead of an ID).
+          TEAM_JSON=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v2/teams?limit=100")
+          PROJECT_JSON=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=100")
+
+          # Team: match by slug, then by ID; else fall back to the (single) team,
+          # else empty → the CLI's default (personal) scope is used.
+          TEAM_ID=$(echo "$TEAM_JSON" | jq -r '.teams[] | select(.slug == env.VERCEL_ORG_SLUG or .id == env.VERCEL_ORG_SLUG) | .id' | head -n1)
+          if [ -z "$TEAM_ID" ]; then
+            TEAM_ID=$(echo "$TEAM_JSON" | jq -r '.teams[0].id // empty')
+          fi
+          echo "Resolved team: ${TEAM_ID:-<default personal scope>}"
+
+          # Project: match by name or ID against the default scope, then the team scope.
+          PROJECT_ID=$(echo "$PROJECT_JSON" | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_NAME or .id == env.VERCEL_PROJECT_NAME) | .id' | head -n1)
+          if [ -z "$PROJECT_ID" ] && [ -n "$TEAM_ID" ]; then
+            PROJECT_ID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects?teamId=$TEAM_ID&limit=100" \
+              | jq -r '.projects[] | select(.name == env.VERCEL_PROJECT_NAME or .id == env.VERCEL_PROJECT_NAME) | .id' | head -n1)
+          fi
+          echo "Resolved project: ${PROJECT_ID:-<not found>}"
+
+          # ── Sync backend environment variables into the Vercel project ──
+          # GitHub secrets are not visible to Vercel runtime, and the Supabase
+          # integration reports "Skipped" when it has nothing to provision —
+          # so we explicitly upsert every backend var for prod + preview.
+          if [ -n "$PROJECT_ID" ]; then
+            upsert_env() {
+              if [ -z "$2" ]; then
+                echo "  ⏭  $1 (GitHub secret empty — skipped)"
+                return 0
+              fi
+              local err
+              err=$(curl -s -X POST \
+                -H "Authorization: Bearer $VERCEL_TOKEN" \
+                -H "Content-Type: application/json" \
+                "https://api.vercel.com/v9/projects/$PROJECT_ID/env?upsert=true&teamId=$TEAM_ID" \
+                -d "{\"key\":\"$1\",\"value\":\"$2\",\"type\":\"encrypted\",\"target\":[\"production\",\"preview\"]}" \
+                | jq -r '.error.message // empty')
+              if [ -n "$err" ]; then
+                echo "  ❌ $1: $err"
+              else
+                echo "  ✔ $1 synced"
+              fi
+            }
+            echo "› Syncing backend env vars into the Vercel project..."
+            upsert_env DATABASE_URL "$DATABASE_URL"
+            upsert_env SUPABASE_URL "$SUPABASE_URL"
+            upsert_env SUPABASE_PUBLISHABLE_KEY "$SUPABASE_PUBLISHABLE_KEY"
+            upsert_env SUPABASE_SECRET_KEY "$SUPABASE_SECRET_KEY"
+            upsert_env SUPABASE_JWKS_URL "$SUPABASE_JWKS_URL"
+            # Backend code reads JWT_SECRET; the repo stores it as WT_SECRET.
+            upsert_env JWT_SECRET "$WT_SECRET_VALUE"
+            upsert_env NODE_ENV "production"
+            echo "› Env vars now on the Vercel project (names only):"
+            curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/$PROJECT_ID/env?teamId=$TEAM_ID" \
+              | jq -r '.envs[] | "  \(.key) [\(.target | join(", "))]"'
+          fi
+
+          # ── Link ──
+          if [ -n "$PROJECT_ID" ]; then
             vercel link --yes \
-              --token=${{ secrets.VERCEL_TOKEN }} \
-              --scope=${{ secrets.VERCEL_ORG_ID }} \
-              --project=${{ secrets.VERCEL_PROJECT_ID }}
+              --token="$VERCEL_TOKEN" \
+              --scope="$TEAM_ID" \
+              --project="$PROJECT_ID"
+          else
+            echo "⚠️  Could not resolve project '$VERCEL_PROJECT_NAME' — check the secrets."
+            vercel link --yes --token="$VERCEL_TOKEN"
           fi
 
           echo "Deploying to production..."
-          vercel deploy --prod --yes \
-            --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          # Optional — only needed for explicit project linking
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          # Renamed on purpose: the CLI auto-reads VERCEL_ORG_ID / VERCEL_PROJECT_ID
+          # env vars and would override/conflict with the resolved IDs above.
+          VERCEL_ORG_SLUG: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_ID }}
+          # Backend runtime variables synced into the Vercel project before deploy
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_JWKS_URL: ${{ secrets.SUPABASE_JWKS_URL }}
+          WT_SECRET_VALUE: ${{ secrets.WT_SECRET }}
