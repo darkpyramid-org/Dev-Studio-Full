@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
@@ -48,10 +48,13 @@ export function InnerSidebarSearch({
   value,
   onChange,
   placeholder = "Search…",
+  onClear,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** When provided, shows a clear (×) button while the input has text. */
+  onClear?: () => void;
 }) {
   return (
     <div className="px-2 pt-2 shrink-0">
@@ -62,8 +65,17 @@ export function InnerSidebarSearch({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="bg-muted/40 border-border/60 rounded-xl py-1.5 pl-8 pr-3 text-xs h-auto outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/20 shadow-none"
+          className="bg-muted/40 border-border/60 rounded-xl py-1.5 pl-8 pr-7 text-xs h-auto outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/20 shadow-none"
         />
+        {onClear && value && (
+          <button
+            onClick={onClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="size-3" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -171,9 +183,11 @@ export function InnerSidebarItem({
 
 export function InnerSidebarEmpty({
   message,
+  subtitle,
   icon,
 }: {
   message: string;
+  subtitle?: string;
   icon?: ReactNode;
 }) {
   return (
@@ -181,7 +195,8 @@ export function InnerSidebarEmpty({
       <div className="size-8 rounded-xl bg-muted/30 grid place-items-center">
         {icon ?? <Plus className="size-4 opacity-50" />}
       </div>
-      {message}
+      <p className="text-xs text-muted-foreground">{message}</p>
+      {subtitle && <p className="text-[10px] text-muted-foreground/60">{subtitle}</p>}
     </div>
   );
 }

@@ -1,15 +1,18 @@
-import { Plus, Star } from "lucide-react";
-import { useState } from "react";
+import { Star } from "lucide-react";
+import { useMemo, useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { MyService } from "@/types/jobs";
-import { SERVICE_STATUS_COLORS, getStatusColor, SERVICE_STATUS_LABELS } from "@/constants";
+import { getStatusColor, SERVICE_STATUS_LABELS } from "@/constants";
 import {
   InnerSidebar,
   InnerSidebarHeader,
   InnerSidebarSearch,
   InnerSidebarFilters,
   InnerSidebarDivider,
+  InnerSidebarList,
+  InnerSidebarItem,
+  InnerSidebarEmpty,
   InnerSidebarAddButton,
 } from "@/components/layout";
 
@@ -24,24 +27,25 @@ export function ServicesSidebar({ services, activeId, onSelect, onAdd }: Props) 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const FILTERS = [
-    { label: "All", value: "all" },
-    {
-      label: "Active",
-      value: "active",
-      count: services.filter((s) => s.status === "active").length,
-    },
-    {
-      label: "Paused",
-      value: "paused",
-      count: services.filter((s) => s.status === "paused").length,
-    },
-    {
-      label: "Draft",
-      value: "draft",
-      count: services.filter((s) => s.status === "draft").length,
-    },
-  ];
+  // Single-pass status count + memoized filter array
+  const statusCounts = useMemo(
+    () =>
+      services.reduce<Record<string, number>>((acc, s) => {
+        acc[s.status] = (acc[s.status] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [services],
+  );
+
+  const FILTERS = useMemo(
+    () => [
+      { label: "All", value: "all" },
+      { label: "Active", value: "active", count: statusCounts["active"] ?? 0 },
+      { label: "Paused", value: "paused", count: statusCounts["paused"] ?? 0 },
+      { label: "Draft", value: "draft", count: statusCounts["draft"] ?? 0 },
+    ],
+    [statusCounts],
+  );
 
   const filtered = services.filter((s) => {
     const matchesSearch =
@@ -75,33 +79,26 @@ export function ServicesSidebar({ services, activeId, onSelect, onAdd }: Props) 
         wrap
       />
       <InnerSidebarDivider />
-      <div className="flex-1 overflow-y-auto p-2">
+      <InnerSidebarList>
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center px-4">
-            <Star className="size-8 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground">
-              {searchQuery || activeFilter !== "all"
+          <InnerSidebarEmpty
+            message={
+              searchQuery || activeFilter !== "all"
                 ? "No matching services"
-                : "No services listed yet."}
-            </p>
-            {!searchQuery && activeFilter === "all" && (
-              <p className="text-[10px] text-muted-foreground/60">
-                Add your Fiverr, Mostaql, or Khamsat gigs.
-              </p>
-            )}
-          </div>
+                : "No services listed yet."
+            }
+            subtitle={
+              !searchQuery && activeFilter === "all"
+                ? "Add your Fiverr, Mostaql, or Khamsat gigs."
+                : undefined
+            }
+            icon={<Star className="size-4 text-muted-foreground/50" />}
+          />
         )}
         <ul className="space-y-0.5">
           {paged.map((svc) => (
             <li key={svc.id}>
-              <button
-                onClick={() => onSelect(svc.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
-                  activeId === svc.id
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <InnerSidebarItem active={activeId === svc.id} onClick={() => onSelect(svc.id)}>
                 <p className="text-xs font-medium truncate leading-snug">{svc.title}</p>
                 {svc.category && (
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5">
@@ -117,7 +114,7 @@ export function ServicesSidebar({ services, activeId, onSelect, onAdd }: Props) 
                     </span>
                   )}
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${SERVICE_STATUS_COLORS[svc.status] ?? ""}`}
+                    className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${getStatusColor(svc.status, "service")}`}
                   >
                     {SERVICE_STATUS_LABELS[svc.status] ?? svc.status}
                   </span>
@@ -132,11 +129,11 @@ export function ServicesSidebar({ services, activeId, onSelect, onAdd }: Props) 
                     </span>
                   )}
                 </div>
-              </button>
+              </InnerSidebarItem>
             </li>
           ))}
         </ul>
-      </div>
+      </InnerSidebarList>
       <ListPagination
         page={page}
         totalPages={totalPages}

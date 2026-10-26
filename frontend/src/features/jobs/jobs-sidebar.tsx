@@ -1,9 +1,9 @@
-import { Plus, Briefcase } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { SavedJob } from "@/types/jobs";
-import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, JOB_SIDEBAR_FILTERS } from "@/constants";
+import { JOB_STATUS_LABELS, JOB_SIDEBAR_FILTERS, getStatusColor } from "@/constants";
 import { JOB_STATUSES } from "@/types/jobs";
 import {
   InnerSidebar,
@@ -11,6 +11,9 @@ import {
   InnerSidebarSearch,
   InnerSidebarFilters,
   InnerSidebarDivider,
+  InnerSidebarList,
+  InnerSidebarItem,
+  InnerSidebarEmpty,
   InnerSidebarAddButton,
 } from "@/components/layout";
 
@@ -59,19 +62,19 @@ export function JobsSidebar({ jobs, activeId, onSelect, onAdd }: Props) {
       />
       <InnerSidebarFilters filters={JOB_SIDEBAR_FILTERS} active={activeFilter} onChange={setActiveFilter} />
       <InnerSidebarDivider />
-      <div className="overflow-y-auto p-2 space-y-3 flex-1">
+      <InnerSidebarList>
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center px-4">
-            <Briefcase className="size-8 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground">
-              {searchQuery || activeFilter !== "all" ? "No matching jobs" : "No jobs tracked yet."}
-            </p>
-            {!searchQuery && activeFilter === "all" && (
-              <p className="text-[10px] text-muted-foreground/60">
-                Browse live jobs or add one manually.
-              </p>
-            )}
-          </div>
+          <InnerSidebarEmpty
+            message={
+              searchQuery || activeFilter !== "all" ? "No matching jobs" : "No jobs tracked yet."
+            }
+            subtitle={
+              !searchQuery && activeFilter === "all"
+                ? "Browse live jobs or add one manually."
+                : undefined
+            }
+            icon={<Briefcase className="size-4 text-muted-foreground/50" />}
+          />
         )}
         {JOB_STATUSES.map((status) => {
           const items = grouped[status];
@@ -84,13 +87,9 @@ export function JobsSidebar({ jobs, activeId, onSelect, onAdd }: Props) {
               <ul className="space-y-0.5">
                 {items.map((job) => (
                   <li key={job.id}>
-                    <button
+                    <InnerSidebarItem
+                      active={activeId === job.id}
                       onClick={() => onSelect(job.id)}
-                      className={`w-full text-left px-3 py-2 rounded-xl transition-all ${
-                        activeId === job.id
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                          : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-                      }`}
                     >
                       <p className="text-xs font-medium truncate leading-snug">{job.title}</p>
                       {job.company && (
@@ -100,7 +99,7 @@ export function JobsSidebar({ jobs, activeId, onSelect, onAdd }: Props) {
                       )}
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         <span
-                          className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${JOB_STATUS_COLORS[job.status] ?? ""}`}
+                          className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-medium ${getStatusColor(job.status, "job")}`}
                         >
                           {JOB_STATUS_LABELS[job.status] ?? job.status}
                         </span>
@@ -115,14 +114,14 @@ export function JobsSidebar({ jobs, activeId, onSelect, onAdd }: Props) {
                           </span>
                         )}
                       </div>
-                    </button>
+                    </InnerSidebarItem>
                   </li>
                 ))}
               </ul>
             </div>
           );
         })}
-      </div>
+      </InnerSidebarList>
       <ListPagination
         page={page}
         totalPages={totalPages}

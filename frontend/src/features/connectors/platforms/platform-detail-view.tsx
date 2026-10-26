@@ -26,13 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ParsedPlatform } from "../platform-helpers";
+import type { Platform } from "@/types/platforms";
 import { RegionIcon } from "./platform-badges";
 import { DetailHeader, FormRow, FormSectionCard } from "../shared";
 
 export interface PlatformDetailViewProps {
-  platform: ParsedPlatform;
-  onChange: (updated: ParsedPlatform) => void;
+  platform: Platform;
+  onChange: (updated: Platform) => void;
   onSave: () => void;
   onDelete: (id: string) => void;
   onBack: () => void;
@@ -47,7 +47,7 @@ export function PlatformDetailView({
   onBack,
   isSaving,
 }: PlatformDetailViewProps) {
-  const update = (patch: Partial<ParsedPlatform>) => {
+  const update = (patch: Partial<Platform>) => {
     onChange({ ...platform, ...patch });
   };
 

@@ -3,13 +3,10 @@ import { toast } from "sonner";
 import { SplitLayout } from "@/components/layout";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Connector } from "@/types/tools";
+import type { Platform } from "@/types/platforms";
 import { newId } from "@/lib/store";
 import { PRESET_PLATFORMS } from "@/constants/platforms-presets";
-import {
-  parsePlatformConnector,
-  serializePlatformConnector,
-  type ParsedPlatform,
-} from "../platform-helpers";
+import { parsePlatformConnector, serializePlatformConnector } from "../platform-helpers";
 import { PlatformSidebar } from "./platform-sidebar";
 import { PlatformTableView } from "./platform-table-view";
 import { PlatformDetailView } from "./platform-detail-view";
@@ -51,7 +48,7 @@ export function PlatformsCatalog({
   const [viewMode, setViewMode] = useState<"table" | "detail">("table");
 
   // Editable platform state
-  const [editingPlatform, setEditingPlatform] = useState<ParsedPlatform | null>(null);
+  const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Auto-select first platform when list loads
@@ -78,45 +75,45 @@ export function PlatformsCatalog({
     }
   }, [activeId, uniquePlatformConnectors]);
 
-  // Filtered platforms
-  const filteredPlatforms = useMemo(() => {
-    return uniquePlatformConnectors.filter((c) => {
-      const parsed = parsePlatformConnector(c);
-      const matchesSearch =
-        parsed.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (parsed.arabicName && parsed.arabicName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        parsed.bestFor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parsed.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Parse each connector exactly once per render cycle — this memoized array
+  // is the single source for filtering, region counts and the detail view.
+  const parsedPlatforms = useMemo(
+    () => uniquePlatformConnectors.map(parsePlatformConnector),
+    [uniquePlatformConnectors],
+  );
 
-      const matchesRegion =
-        selectedRegion === "all" ||
-        (selectedRegion === "global" && parsed.regionCode === "global") ||
-        (selectedRegion === "eg" && parsed.regionCode === "eg") ||
-        (selectedRegion === "sa" && parsed.regionCode === "sa");
+  const filteredPlatforms = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return parsedPlatforms.filter((p) => {
+      const matchesSearch =
+        p.name.toLowerCase().includes(q) ||
+        (p.arabicName && p.arabicName.toLowerCase().includes(q)) ||
+        p.bestFor.toLowerCase().includes(q) ||
+        p.specialties.some((s) => s.toLowerCase().includes(q));
+
+      const matchesRegion = selectedRegion === "all" || p.regionCode === selectedRegion;
 
       return matchesSearch && matchesRegion;
     });
-  }, [uniquePlatformConnectors, searchQuery, selectedRegion]);
+  }, [parsedPlatforms, searchQuery, selectedRegion]);
 
-  // Counts for region filter tabs
+  // Counts for region filter tabs — single pass over the parsed list
   const regionFilters = useMemo(() => {
-    const globalCount = uniquePlatformConnectors.filter(
-      (c) => parsePlatformConnector(c).regionCode === "global"
-    ).length;
-    const egCount = uniquePlatformConnectors.filter(
-      (c) => parsePlatformConnector(c).regionCode === "eg"
-    ).length;
-    const saCount = uniquePlatformConnectors.filter(
-      (c) => parsePlatformConnector(c).regionCode === "sa"
-    ).length;
+    const counts = parsedPlatforms.reduce(
+      (acc, p) => {
+        acc[p.regionCode]++;
+        return acc;
+      },
+      { global: 0, eg: 0, sa: 0 } as Record<Platform["regionCode"], number>,
+    );
 
     return [
-      { label: "All", value: "all", count: uniquePlatformConnectors.length },
-      { label: "Global", value: "global", count: globalCount },
-      { label: "Egypt", value: "eg", count: egCount },
-      { label: "Saudi Arabia", value: "sa", count: saCount },
+      { label: "All", value: "all", count: parsedPlatforms.length },
+      { label: "Global", value: "global", count: counts.global },
+      { label: "Egypt", value: "eg", count: counts.eg },
+      { label: "Saudi Arabia", value: "sa", count: counts.sa },
     ];
-  }, [uniquePlatformConnectors]);
+  }, [parsedPlatforms]);
 
   const handleCreateNewPlatform = () => {
     const defaultRegion =
@@ -126,7 +123,7 @@ export function PlatformsCatalog({
         ? { code: "sa" as const, name: "Saudi Arabia" as const }
         : { code: "global" as const, name: "Global" as const };
 
-    const newPlatform: ParsedPlatform = {
+    const newPlatform: Platform = {
       id: newId("conn"),
       name: "New Platform",
       arabicName: "",
@@ -161,7 +158,7 @@ export function PlatformsCatalog({
           c.id === `preset-${preset.id}`
       );
       if (!exists) {
-        const platform: ParsedPlatform = {
+        const platform: Platform = {
           id: `preset-${preset.id}`,
           name: preset.name,
           arabicName: preset.arabicName || "",
@@ -283,6 +280,3 @@ export function PlatformsCatalog({
     </div>
   );
 }
-
-// Named alias for backward compatibility
-export const PlatformsCatalogView = PlatformsCatalog;

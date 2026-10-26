@@ -1,4 +1,7 @@
 export { AppShell } from "./app-shell";
+export { AppHeader } from "./app-header";
+export { AppSidebar } from "./app-sidebar";
+export { NotificationCenter } from "./notification-center";
 export * from "./page-header";
 export * from "./page-section";
 export { CommandPalette } from "./command-palette";

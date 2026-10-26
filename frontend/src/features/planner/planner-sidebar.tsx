@@ -1,15 +1,19 @@
 import type { ReactNode } from "react";
-import { Search, X, TrendingUp } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { TrendingUp } from "lucide-react";
 import type { PlannerTask } from "@/types/planner";
 import { CATEGORY_ICON_COMPONENTS, CATEGORY_LABELS } from "@/data/planner/planner";
 import { getWeekTheme, toDateStr, addDays } from "@/lib/utils/planner";
-import { STATUS_FILTERS } from "@/constants";
+import { STATUS_FILTERS } from "@/data/planner/planner";
 import type { StatusFilter } from "@/types/planner";
+import {
+  InnerSidebar,
+  InnerSidebarSearch,
+  InnerSidebarFilters,
+  InnerSidebarAddButton,
+} from "@/components/layout";
 import { WeekCalendar } from "./components/week-calendar";
 import { WeekThemeCard } from "./components/week-theme-card";
 import { WeekAchievements } from "./components/week-achievements";
-import { Input } from "@/components/ui/input";
 
 interface PlannerSidebarProps {
   selectedDate: string;
@@ -36,6 +40,7 @@ export function PlannerSidebar({
   onPrevWeek,
   onNextWeek,
   onToday,
+  onAddTask,
   weekTheme,
   searchQuery,
   onSearchChange,
@@ -55,47 +60,21 @@ export function PlannerSidebar({
   const weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
 
   return (
-    <div className="flex flex-col h-full bg-muted/20 border-r border-border/50 overflow-hidden">
+    <InnerSidebar className="bg-muted/20 border-r border-border/50 overflow-hidden">
+      {/* ── Search + filter (shared sidebar primitives) ── */}
+      <InnerSidebarSearch
+        value={searchQuery}
+        onChange={onSearchChange}
+        placeholder="Search tasks…"
+        onClear={() => onSearchChange("")}
+      />
+      <InnerSidebarFilters
+        filters={STATUS_FILTERS.map((f) => ({ label: f.label, value: f.id }))}
+        active={statusFilter}
+        onChange={(v) => onStatusFilterChange(v as StatusFilter)}
+      />
+
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        {/* ── Search + filter ── */}
-        <div className="px-2.5 pt-3 pb-1 space-y-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search tasks…"
-              className="h-8 pl-8 pr-7 text-xs rounded-xl bg-background border-border/50 focus-visible:ring-1 focus-visible:ring-primary/40 placeholder:text-muted-foreground/50 shadow-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => onSearchChange("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="size-3" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex gap-1">
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => onStatusFilterChange(f.id)}
-                className={cn(
-                  "flex-1 text-[10px] font-semibold py-1 rounded-lg border transition-all",
-                  statusFilter === f.id
-                    ? "bg-primary/10 border-primary/20 text-primary"
-                    : "border-border/40 text-muted-foreground hover:border-border/60 hover:text-foreground",
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* ── Week calendar ── */}
         <WeekCalendar
           weekStart={weekStart}
@@ -166,7 +145,10 @@ export function PlannerSidebar({
         </div>
       </div>
 
+      {/* ── Add task (wired to onAddTask) ── */}
+      <InnerSidebarAddButton onClick={onAddTask} label="Add Task" />
+
       {extraBottom && <div className="px-2.5 pb-2.5 shrink-0 space-y-2">{extraBottom}</div>}
-    </div>
+    </InnerSidebar>
   );
 }

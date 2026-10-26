@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { Response } from "express";
 import { IUnitOfWork } from "../../domain/repositories/unit-of-work.interface.js";
+import { getJwtSecret } from "../../infrastructure/config/env.js";
 
 export class AuthService {
   constructor(private uow: IUnitOfWork) {}
@@ -62,9 +63,7 @@ export class AuthService {
 
   // ─── Token helpers (belong in application layer, not presentation) ───────
 
-  private static readonly JWT_SECRET =
-    process.env.JWT_SECRET ||
-    "supersecretjwtkey_devstudio_2026_secure_random_string";
+  private static readonly JWT_SECRET = getJwtSecret();
   private static readonly COOKIE_NAME = "ds_token";
   private static readonly COOKIE_OPTS = {
     httpOnly: true,

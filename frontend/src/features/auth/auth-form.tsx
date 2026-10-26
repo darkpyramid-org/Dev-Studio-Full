@@ -3,10 +3,19 @@ import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { SocialAuth } from "./social-auth";
 import { useAuth } from "@/hooks/use-auth";
+import { apiPost } from "@/lib/api/base";
 import { Input } from "@/components/ui/input";
 
 type Tab = "login" | "register";
 type Step = "form" | "verify";
+
+type AuthResponse = {
+  requireVerification?: boolean;
+  email?: string;
+  devVerificationCode?: string;
+  message?: string;
+  error?: string;
+};
 
 export function AuthForm() {
   const [tab, setTab] = useState<Tab>("login");
@@ -45,25 +54,10 @@ export function AuthForm() {
       const endpoint = tab === "login" ? "/api/auth/login" : "/api/auth/register";
       const body = tab === "login" ? { email, password } : { email, password, displayName };
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text().catch(() => "");
-        if (!res.ok) {
-          setError(text.trim() || `Server error (${res.status})`);
-          return;
-        }
-      }
+      const data = await apiPost<AuthResponse>(endpoint, body);
 
       if (data?.requireVerification) {
-        setVerifyEmail(data.email);
+        setVerifyEmail(data.email ?? "");
         setDevCodeHint(data.devVerificationCode ?? null);
         setStep("verify");
         if (data.message) setSuccessMessage(data.message);
@@ -71,14 +65,20 @@ export function AuthForm() {
         return;
       }
 
-      if (!res.ok) {
-        setError(data?.error ?? data?.message ?? "Authentication failed");
-        return;
-      }
       await refresh();
       navigate({ to: "/" });
     } catch (err) {
-      setError((err as Error)?.message || "Could not connect to the server");
+      const apiErr = err as Error & { data?: AuthResponse | null };
+      // Unverified login arrives as a 403 carrying the verify flow payload
+      if (apiErr.data?.requireVerification) {
+        setVerifyEmail(apiErr.data.email ?? "");
+        setDevCodeHint(apiErr.data.devVerificationCode ?? null);
+        setStep("verify");
+        if (apiErr.data.message) setSuccessMessage(apiErr.data.message);
+        if (apiErr.data.error) setError(apiErr.data.error);
+      } else {
+        setError(apiErr?.message || "Could not connect to the server");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,30 +90,11 @@ export function AuthForm() {
     setSuccessMessage(null);
     setVerifyLoading(true);
     try {
-      const res = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: verifyEmail, code: verificationCode }),
-      });
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text().catch(() => "");
-        if (!res.ok) {
-          setError(text.trim() || `Server error (${res.status})`);
-          return;
-        }
-      }
-      if (!res.ok) {
-        setError(data?.error ?? data?.message ?? "Verification failed");
-        return;
-      }
+      await apiPost("/api/auth/verify-email", { email: verifyEmail, code: verificationCode });
       await refresh();
       navigate({ to: "/" });
     } catch (err) {
-      setError((err as Error)?.message || "Could not connect to the server");
+      setError((err as Error)?.message || "Verification failed");
     } finally {
       setVerifyLoading(false);
     }
@@ -123,26 +104,9 @@ export function AuthForm() {
     setError(null);
     setSuccessMessage(null);
     try {
-      const res = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: verifyEmail }),
+      const data = await apiPost<AuthResponse>("/api/auth/resend-verification", {
+        email: verifyEmail,
       });
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text().catch(() => "");
-        if (!res.ok) {
-          setError(text.trim() || `Server error (${res.status})`);
-          return;
-        }
-      }
-      if (!res.ok) {
-        setError(data?.error ?? data?.message ?? "Failed to resend verification code");
-        return;
-      }
       setDevCodeHint(data?.devVerificationCode ?? null);
       setSuccessMessage("Verification code resent successfully!");
     } catch (err) {
@@ -162,7 +126,9 @@ export function AuthForm() {
             </p>
           </div>
 
-          {devCodeHint && (
+          {/* Dev-only hint — double-guarded: the backend strips it in prod and
+              the frontend only renders it in dev builds (import.meta.env.DEV). */}
+          {devCodeHint && import.meta.env.DEV && (
             <div className="p-3 bg-muted rounded-md border border-border text-xs space-y-1">
               <div className="font-semibold text-foreground flex items-center justify-between">
                 <span>[Dev Mode] Verification Code:</span>

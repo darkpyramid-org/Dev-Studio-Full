@@ -61,6 +61,7 @@ export {
 } from "./navigation";
 
 export type {
+  NavEntry,
   WorkspaceNavItem,
   CommunicationNavItem,
   FreelanceNavItem,
