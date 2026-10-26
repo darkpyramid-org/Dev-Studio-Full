@@ -1,26 +1,30 @@
-# Base Node image
-FROM node:20-alpine AS base
+# ── Stage 1: Install dependencies ─────────────────────────────────────────────
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Create and set working directory
+# ── Stage 2: Build TypeScript ──────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# ── Stage 3: Production image ──────────────────────────────────────────────────
+FROM node:22-alpine AS production
 WORKDIR /app
 
-# Copy package descriptors
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# Only copy production deps + compiled output
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
-
-# Copy source code
-COPY . .
-
-# Development stage (runs nodemon for live-reload)
-FROM base AS development
-ENV NODE_ENV=development
 EXPOSE 5000
-CMD ["npm", "run", "dev"]
 
-# Production stage (runs with production environment settings)
-FROM base AS production
-ENV NODE_ENV=production
-EXPOSE 5000
-CMD ["npm", "run", "start"]
+# Use compiled JS entrypoint
+CMD ["npm", "run", "start:prod"]

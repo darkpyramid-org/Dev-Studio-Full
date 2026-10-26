@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon",
-    "build": "npx tsx src/presentation/docs/generate-swagger.ts",
+    "build": "tsc --project tsconfig.build.json",
     "start": "npx tsx src/index.ts",
+    "start:prod": "node dist/index.js",
     "db:push": "npx drizzle-kit push",
     "db:seed": "npx tsx src/infrastructure/database/seed.ts",
     "format": "prettier --write .",
