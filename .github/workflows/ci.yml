@@ -36,7 +36,7 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Install Backend Dependencies
-        run: npm ci --prefix backend
+        run: npm ci --include=dev --prefix backend
 
       - name: Run ESLint (Frontend)
         run: npm run lint:frontend

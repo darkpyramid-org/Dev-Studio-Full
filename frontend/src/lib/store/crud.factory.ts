@@ -1,5 +1,4 @@
 import { toast } from "sonner";
-import type { ForgeState } from "./types";
 
 /**
  * Configuration options for generating standardized CRUD actions.
@@ -36,7 +35,7 @@ interface CrudConfig<S, T extends { id: string }, Payload = T> {
  * @param get - Zustand state getter function.
  * @param config - Configuration mapping store selectors, API calls, and labels.
  */
-export function createCrudActions<T extends { id: string }, Payload = T, S = ForgeState>(
+export function createCrudActions<S, T extends { id: string }, Payload = T>(
   set: (partial: Partial<S> | ((s: S) => Partial<S>)) => void,
   get: () => S,
   config: CrudConfig<S, T, Payload>,
