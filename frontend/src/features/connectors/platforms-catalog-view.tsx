@@ -7,26 +7,26 @@ import {
   Trash2,
   Save,
   Sparkles,
-  Link as LinkIcon,
-  Search,
-  Check,
-  Tag,
-  Layers,
   MapPin,
   Percent,
   CheckCircle2,
-  Star,
   UserCheck,
   Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea } from "@/features/tools/shared";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Connector } from "@/types/tools";
 import { newId } from "@/lib/store";
 import {
   PRESET_PLATFORMS,
-  PLATFORM_REGIONS,
   type PlatformPreset,
 } from "@/constants/platforms-presets";
 import {
@@ -39,9 +39,12 @@ import {
   InnerSidebar,
   InnerSidebarHeader,
   InnerSidebarSearch,
+  InnerSidebarFilters,
+  InnerSidebarDivider,
   InnerSidebarList,
   InnerSidebarItem,
   InnerSidebarEmpty,
+  InnerSidebarAddButton,
   SplitLayout,
 } from "@/components/layout";
 
@@ -61,28 +64,40 @@ export function PlatformsCatalogView({
     [connectors]
   );
 
+  // Deduplicate platform connectors by normalized name so no duplicates appear
+  const uniquePlatformConnectors = useMemo(() => {
+    const seen = new Set<string>();
+    const list: Connector[] = [];
+    for (const c of platformConnectors) {
+      const key = (c.name || "").trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push(c);
+      }
+    }
+    return list;
+  }, [platformConnectors]);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState<string>("All");
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Editable platform state
   const [editingPlatform, setEditingPlatform] = useState<ParsedPlatform | null>(null);
-  const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
-  const [newTagInput, setNewTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-select first platform
+  // Auto-select first platform when list loads or changes
   useEffect(() => {
-    if (platformConnectors.length > 0) {
-      if (!activeId || !platformConnectors.some((c) => c.id === activeId)) {
-        setActiveId(platformConnectors[0].id);
+    if (uniquePlatformConnectors.length > 0) {
+      if (!activeId || !uniquePlatformConnectors.some((c) => c.id === activeId)) {
+        setActiveId(uniquePlatformConnectors[0].id);
       }
     } else {
       setActiveId(null);
       setEditingPlatform(null);
     }
-  }, [platformConnectors, activeId]);
+  }, [uniquePlatformConnectors, activeId]);
 
   // When activeId changes, parse connector into editable state
   useEffect(() => {
@@ -90,34 +105,56 @@ export function PlatformsCatalogView({
       setEditingPlatform(null);
       return;
     }
-    const current = platformConnectors.find((c) => c.id === activeId);
+    const current = uniquePlatformConnectors.find((c) => c.id === activeId);
     if (current) {
       setEditingPlatform(parsePlatformConnector(current));
     }
-  }, [activeId, platformConnectors]);
+  }, [activeId, uniquePlatformConnectors]);
 
   // Filtered platforms
   const filteredPlatforms = useMemo(() => {
-    return platformConnectors.filter((c) => {
+    return uniquePlatformConnectors.filter((c) => {
       const parsed = parsePlatformConnector(c);
       const matchesSearch =
         parsed.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (parsed.arabicName && parsed.arabicName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         parsed.bestFor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parsed.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        parsed.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        parsed.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesRegion =
-        selectedRegion === "All" || parsed.region === selectedRegion;
+        selectedRegion === "all" ||
+        (selectedRegion === "global" && parsed.regionCode === "global") ||
+        (selectedRegion === "eg" && parsed.regionCode === "eg") ||
+        (selectedRegion === "sa" && parsed.regionCode === "sa");
 
       return matchesSearch && matchesRegion;
     });
-  }, [platformConnectors, searchQuery, selectedRegion]);
+  }, [uniquePlatformConnectors, searchQuery, selectedRegion]);
 
-  // 1-Click Load All 22 Presets
+  // Counts for region filter tabs
+  const regionFilters = useMemo(() => {
+    const globalCount = uniquePlatformConnectors.filter(
+      (c) => parsePlatformConnector(c).regionCode === "global"
+    ).length;
+    const egCount = uniquePlatformConnectors.filter(
+      (c) => parsePlatformConnector(c).regionCode === "eg"
+    ).length;
+    const saCount = uniquePlatformConnectors.filter(
+      (c) => parsePlatformConnector(c).regionCode === "sa"
+    ).length;
+
+    return [
+      { label: "All", value: "all", count: uniquePlatformConnectors.length },
+      { label: "Global 🌐", value: "global", count: globalCount },
+      { label: "Egypt 🇪🇬", value: "eg", count: egCount },
+      { label: "Saudi Arabia 🇸🇦", value: "sa", count: saCount },
+    ];
+  }, [uniquePlatformConnectors]);
+
+  // 1-Click Load All 22 Presets (deduplicated)
   const handleLoadPresets = () => {
     const existingNames = new Set(
-      platformConnectors.map((s) => s.name.trim().toLowerCase())
+      uniquePlatformConnectors.map((s) => s.name.trim().toLowerCase())
     );
 
     let addedCount = 0;
@@ -209,108 +246,39 @@ export function PlatformsCatalogView({
     }
   };
 
-  // Add / Remove Specialty
-  const handleAddSpecialty = () => {
-    if (!newSpecialtyInput.trim() || !editingPlatform) return;
-    setEditingPlatform({
-      ...editingPlatform,
-      specialties: [...editingPlatform.specialties, newSpecialtyInput.trim()],
-    });
-    setNewSpecialtyInput("");
-  };
-
-  const handleRemoveSpecialty = (index: number) => {
-    if (!editingPlatform) return;
-    const next = [...editingPlatform.specialties];
-    next.splice(index, 1);
-    setEditingPlatform({ ...editingPlatform, specialties: next });
-  };
-
-  // Add / Remove Tag
-  const handleAddTag = () => {
-    if (!newTagInput.trim() || !editingPlatform) return;
-    const tag = newTagInput.trim();
-    if (!editingPlatform.tags.includes(tag)) {
-      setEditingPlatform({
-        ...editingPlatform,
-        tags: [...editingPlatform.tags, tag],
-      });
-    }
-    setNewTagInput("");
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    if (!editingPlatform) return;
-    setEditingPlatform({
-      ...editingPlatform,
-      tags: editingPlatform.tags.filter((t) => t !== tagToRemove),
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "top_rated":
-        return {
-          label: "Top Rated ⭐",
-          className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-        };
-      case "active":
-        return {
-          label: "Active Account ✅",
-          className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-        };
-      case "applied":
-        return {
-          label: "Application Pending ⏳",
-          className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-        };
-      default:
-        return {
-          label: "Exploring 🔍",
-          className: "bg-muted text-muted-foreground border-border",
-        };
-    }
-  };
-
   return (
     <div className="flex-1 min-h-0 h-full overflow-hidden">
       <SplitLayout
-        sidebarWidth="lg:w-[320px]"
+        sidebarWidth="lg:w-[260px]"
         sidebar={
           <InnerSidebar>
             <InnerSidebarHeader
-              icon={<Globe className="size-4 text-primary" />}
-              title="Sites & Platforms"
-              count={platformConnectors.length}
+              icon={<Globe className="size-3.5" />}
+              title="Platforms"
+              count={uniquePlatformConnectors.length}
               onAdd={() => handleCreateNewPlatform()}
-              addLabel="New Site"
+              addLabel="New Platform"
             />
 
             <InnerSidebarSearch
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search by name, region or skill..."
+              placeholder="Search platforms..."
             />
 
-            {/* Region Filter Tabs */}
-            <div className="px-2 pb-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 border-b border-border/50">
-              {PLATFORM_REGIONS.map((region) => (
-                <button
-                  key={region}
-                  onClick={() => setSelectedRegion(region)}
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap transition-colors ${
-                    selectedRegion === region
-                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {region}
-                </button>
-              ))}
+            <div className="pt-1.5 pb-1">
+              <InnerSidebarFilters
+                wrap={true}
+                filters={regionFilters}
+                active={selectedRegion}
+                onChange={setSelectedRegion}
+              />
             </div>
 
-            {/* 1-Click Load 22 Presets Action Bar */}
-            {platformConnectors.length < 22 && (
+            <InnerSidebarDivider />
+
+            {/* Presets loader pill if missing */}
+            {uniquePlatformConnectors.length < 22 && (
               <div className="p-2 border-b border-border/40 bg-primary/5">
                 <Button
                   size="sm"
@@ -329,9 +297,9 @@ export function PlatformsCatalogView({
                 <div className="p-3 text-center">
                   <InnerSidebarEmpty
                     message={
-                      searchQuery || selectedRegion !== "All"
-                        ? "No matching platforms found"
-                        : "No platforms added yet"
+                      searchQuery || selectedRegion !== "all"
+                        ? "No matching platforms"
+                        : "No platforms yet"
                     }
                   />
                   <Button
@@ -340,7 +308,7 @@ export function PlatformsCatalogView({
                     onClick={handleLoadPresets}
                     className="mt-3 text-xs w-full"
                   >
-                    <Sparkles className="size-3.5 mr-1.5" /> Load 22 Platforms
+                    <Sparkles className="size-3.5 mr-1.5" /> Load 22 Presets
                   </Button>
                 </div>
               ) : (
@@ -357,40 +325,16 @@ export function PlatformsCatalogView({
                       onDelete={() => setPendingDeleteId(c.id)}
                     >
                       <div className="flex items-center gap-2.5 w-full min-w-0">
-                        <div
-                          className={`size-7 rounded-md flex items-center justify-center text-sm shrink-0 ${
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-foreground group-hover:bg-muted/80"
-                          }`}
-                        >
-                          {flag}
-                        </div>
+                        <span className="text-sm shrink-0">{flag}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="font-semibold text-xs truncate">
-                              {parsed.name}
-                            </span>
-                            <span className="text-[10px] bg-muted/80 px-1 py-0.2 rounded text-muted-foreground shrink-0 font-mono">
-                              {parsed.commission.split(" ")[0]}
-                            </span>
+                          <div className="font-medium text-xs truncate">
+                            {parsed.name}
                           </div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                            <span className="truncate max-w-[130px]">
-                              {parsed.arabicName || parsed.region}
-                            </span>
-                            {parsed.url && (
-                              <a
-                                href={parsed.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-primary hover:underline ml-auto"
-                                title="Open site"
-                              >
-                                ↗
-                              </a>
-                            )}
+                          <div className="truncate text-[10px] text-muted-foreground mt-0.5">
+                            {parsed.arabicName || parsed.region}
+                          </div>
+                          <div className="text-[9px] text-muted-foreground/60 mt-0.5 font-mono">
+                            {parsed.commission}
                           </div>
                         </div>
                       </div>
@@ -399,47 +343,38 @@ export function PlatformsCatalogView({
                 })
               )}
             </InnerSidebarList>
+
+            <InnerSidebarAddButton
+              onClick={() => handleCreateNewPlatform()}
+              label="New Platform"
+            />
           </InnerSidebar>
         }
       >
         {/* Main Content Area */}
         {editingPlatform ? (
-          <div className="h-full overflow-y-auto scrollbar-thin p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
-            {/* Top Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-10 h-full flex flex-col overflow-hidden">
+            {/* Top Action Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 text-2xl flex items-center justify-center shadow-xs">
-                  {getPlatformFlag(editingPlatform.regionCode)}
-                </div>
+                <span className="text-2xl">{getPlatformFlag(editingPlatform.regionCode)}</span>
                 <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs uppercase tracking-wider font-semibold text-primary">
-                      {editingPlatform.region}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full border ${
-                        getStatusBadge(editingPlatform.status).className
-                      }`}
-                    >
-                      {getStatusBadge(editingPlatform.status).label}
-                    </span>
-                  </div>
-                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                    {editingPlatform.name}
-                    {editingPlatform.arabicName && (
-                      <span className="text-base text-muted-foreground font-normal">
-                        ({editingPlatform.arabicName})
-                      </span>
-                    )}
-                  </h1>
+                  <h2 className="text-xl sm:text-2xl font-semibold capitalize">
+                    {editingPlatform.name} Details
+                  </h2>
+                  {editingPlatform.arabicName && (
+                    <p className="text-xs text-muted-foreground mt-0.5 font-normal">
+                      {editingPlatform.arabicName}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                 {editingPlatform.url && editingPlatform.url !== "https://" && (
                   <Button
-                    size="sm"
                     variant="outline"
+                    size="sm"
                     asChild
                     className="flex items-center gap-1.5 text-xs h-9"
                   >
@@ -455,8 +390,8 @@ export function PlatformsCatalogView({
 
                 {editingPlatform.myProfileUrl && (
                   <Button
-                    size="sm"
                     variant="secondary"
+                    size="sm"
                     asChild
                     className="flex items-center gap-1.5 text-xs h-9"
                   >
@@ -465,14 +400,14 @@ export function PlatformsCatalogView({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <UserCheck className="size-3.5 text-emerald-500" /> My Profile
+                      <UserCheck className="size-3.5 text-emerald-500" /> My Profile ↗
                     </a>
                   </Button>
                 )}
 
                 <Button
-                  size="sm"
                   variant="destructive"
+                  size="sm"
                   onClick={() => setPendingDeleteId(editingPlatform.id)}
                   className="flex items-center gap-1.5 text-xs h-9"
                 >
@@ -480,110 +415,86 @@ export function PlatformsCatalogView({
                 </Button>
 
                 <Button
-                  size="sm"
                   onClick={handleSavePlatform}
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 text-xs h-9 font-semibold"
+                  className="flex items-center gap-2 text-xs h-9"
                 >
-                  <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Platform"}
+                  <Save className="size-4" /> {isSaving ? "Saving..." : "Save Details"}
                 </Button>
               </div>
             </div>
 
-            {/* Quick Switch Preset Bar */}
-            <div className="p-3 bg-muted/30 border border-border/50 rounded-xl flex items-center justify-between gap-3 text-xs">
-              <span className="text-muted-foreground flex items-center gap-1.5 font-medium shrink-0">
-                <Sparkles className="size-3.5 text-primary" /> Switch to preset:
-              </span>
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                {PRESET_PLATFORMS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setEditingPlatform({
-                        ...editingPlatform,
-                        name: p.name,
-                        arabicName: p.arabicName,
-                        region: p.region,
-                        regionCode: p.regionCode,
-                        url: p.url,
-                        commission: p.commission,
-                        description: p.description,
-                        bestFor: p.bestFor,
-                        specialties: [...p.specialties],
-                        tags: [...p.tags],
-                      });
-                      toast.info(`Switched to template: ${p.name}`);
-                    }}
-                    className="text-[11px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/50 hover:bg-muted transition-colors whitespace-nowrap"
-                  >
-                    {getPlatformFlag(p.regionCode)} {p.name.split(" ")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Section 1: Platform Essentials */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Building className="size-4 text-primary" /> Platform Information & Links
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Platform Name
-                  </label>
+            {/* Form & Notes Content */}
+            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
+              {/* Form Card */}
+              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-4">
+                {/* Platform Name */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <Building className="size-4" /> Platform Name:
+                  </span>
                   <Input
                     type="text"
                     value={editingPlatform.name}
                     onChange={(e) =>
                       setEditingPlatform({ ...editingPlatform, name: e.target.value })
                     }
+                    className="flex-1 font-medium"
                     placeholder="e.g. Upwork, Fiverr, منصة صبار"
-                    className="font-medium"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Location / Region
-                  </label>
-                  <select
-                    value={editingPlatform.region}
-                    onChange={(e) => {
-                      const region = e.target.value as any;
-                      const regionCode =
-                        region.includes("Saudi") ? "sa" : region.includes("Egypt") ? "eg" : "global";
-                      setEditingPlatform({ ...editingPlatform, region, regionCode });
-                    }}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="Global 🌐">Global 🌐</option>
-                    <option value="Egypt 🇪🇬">Egypt 🇪🇬</option>
-                    <option value="Saudi Arabia 🇸🇦">Saudi Arabia 🇸🇦</option>
-                  </select>
+                {/* Location / Region (Reusable Select) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <MapPin className="size-4" /> Location / Region:
+                  </span>
+                  <div className="flex-1">
+                    <Select
+                      value={editingPlatform.region}
+                      onValueChange={(val) => {
+                        const region = val as any;
+                        const regionCode = region.includes("Saudi")
+                          ? "sa"
+                          : region.includes("Egypt")
+                          ? "eg"
+                          : "global";
+                        setEditingPlatform({ ...editingPlatform, region, regionCode });
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Global 🌐">Global 🌐</SelectItem>
+                        <SelectItem value="Egypt 🇪🇬">Egypt 🇪🇬</SelectItem>
+                        <SelectItem value="Saudi Arabia 🇸🇦">Saudi Arabia 🇸🇦</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <ExternalLink className="size-3 text-primary" /> Official Website URL
-                  </label>
+                {/* Website URL */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <ExternalLink className="size-4" /> Website URL:
+                  </span>
                   <Input
                     type="url"
                     value={editingPlatform.url}
                     onChange={(e) =>
                       setEditingPlatform({ ...editingPlatform, url: e.target.value })
                     }
+                    className="flex-1 font-mono text-xs"
                     placeholder="https://www.upwork.com"
-                    className="font-mono text-xs"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <UserCheck className="size-3 text-emerald-500" /> My Profile / Store URL
-                  </label>
+                {/* My Profile Link */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <UserCheck className="size-4" /> My Profile Link:
+                  </span>
                   <Input
                     type="url"
                     value={editingPlatform.myProfileUrl || ""}
@@ -593,15 +504,16 @@ export function PlatformsCatalogView({
                         myProfileUrl: e.target.value,
                       })
                     }
-                    placeholder="e.g. https://www.upwork.com/freelancers/~0123abc"
-                    className="font-mono text-xs"
+                    className="flex-1 font-mono text-xs"
+                    placeholder="https://www.upwork.com/freelancers/~0123"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <Percent className="size-3 text-amber-500" /> Commission & Fees
-                  </label>
+                {/* Commission & Fees */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <Percent className="size-4" /> Commission & Fees:
+                  </span>
                   <Input
                     type="text"
                     value={editingPlatform.commission}
@@ -611,58 +523,57 @@ export function PlatformsCatalogView({
                         commission: e.target.value,
                       })
                     }
-                    placeholder="e.g. 10% Flat Fee, 0% Commission, Hourly shift pay"
+                    className="flex-1"
+                    placeholder="10% Flat Fee, 0% Commission..."
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Account Status
-                  </label>
-                  <select
-                    value={editingPlatform.status}
-                    onChange={(e) =>
-                      setEditingPlatform({
-                        ...editingPlatform,
-                        status: e.target.value as any,
-                      })
-                    }
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="active">Active Account ✅</option>
-                    <option value="top_rated">Top Rated / Pro ⭐</option>
-                    <option value="applied">Application Pending ⏳</option>
-                    <option value="exploring">Exploring 🔍</option>
-                  </select>
+                {/* Account Status (Reusable Select) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <CheckCircle2 className="size-4" /> Account Status:
+                  </span>
+                  <div className="flex-1">
+                    <Select
+                      value={editingPlatform.status}
+                      onValueChange={(val: any) =>
+                        setEditingPlatform({ ...editingPlatform, status: val })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active Account ✅</SelectItem>
+                        <SelectItem value="top_rated">Top Rated / Pro ⭐</SelectItem>
+                        <SelectItem value="applied">Application Pending ⏳</SelectItem>
+                        <SelectItem value="exploring">Exploring 🔍</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Section 2: What It's Best For & Overview */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-emerald-500" /> What This Platform Is Best For
-              </h2>
-
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Key Value Proposition / Best For
-                  </label>
+              {/* Notes & Details Card */}
+              <div className="flex-1 bg-card border border-border rounded-lg p-6 flex flex-col gap-4 min-h-[220px]">
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                    Best For & Key Value:
+                  </span>
                   <Input
-                    type="text"
                     value={editingPlatform.bestFor}
                     onChange={(e) =>
                       setEditingPlatform({ ...editingPlatform, bestFor: e.target.value })
                     }
+                    className="text-sm font-medium"
                     placeholder="e.g. Enterprise contracts, fast hourly shifts, packaged landing pages"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Platform Overview & Operating Notes
-                  </label>
+                <div className="flex-1 flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground mb-2 block">
+                    Notes & Details:
+                  </span>
                   <TextArea
                     value={editingPlatform.description}
                     onChange={(e) =>
@@ -671,132 +582,20 @@ export function PlatformsCatalogView({
                         description: e.target.value,
                       })
                     }
-                    rows={3}
-                    className="w-full text-sm leading-relaxed"
-                    placeholder="Describe how payment escrow works, client communication norms, and tips for landing jobs here..."
+                    className="w-full flex-1 resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none text-sm leading-relaxed bg-transparent min-h-[100px]"
+                    placeholder="Add notes about payment escrow, client expectations, proposal tips, or account requirements..."
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Section 3: Accepted Specialties & Skills */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Layers className="size-4 text-primary" /> Key Specialties & Demanded Skills
-              </h2>
-
-              <div className="flex flex-wrap items-center gap-1.5 min-h-[32px]">
-                {editingPlatform.specialties.map((spec, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1 text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-md"
-                  >
-                    {spec}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSpecialty(idx)}
-                      className="hover:text-destructive ml-0.5"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <Input
-                  type="text"
-                  value={newSpecialtyInput}
-                  onChange={(e) => setNewSpecialtyInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddSpecialty();
-                    }
-                  }}
-                  placeholder="Add specialty (e.g. Next.js, Mobile Apps, UI Design)..."
-                  className="text-sm"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleAddSpecialty}
-                  className="shrink-0 text-xs h-9"
-                >
-                  <Plus className="size-3.5 mr-1" /> Add Specialty
-                </Button>
-              </div>
-            </div>
-
-            {/* Section 4: Tags & Keywords */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Tag className="size-4 text-primary" /> Tags & Categories
-              </h2>
-
-              <div className="flex flex-wrap items-center gap-1.5 min-h-[32px]">
-                {editingPlatform.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 text-xs font-medium bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-md"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive ml-0.5"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <Input
-                  type="text"
-                  value={newTagInput}
-                  onChange={(e) => setNewTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Add tag (e.g. Escrow, Remote, Saudi Market, Instant Pay)..."
-                  className="text-sm"
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={handleAddTag}
-                  className="shrink-0 text-xs h-9"
-                >
-                  <Plus className="size-3.5 mr-1" /> Add Tag
-                </Button>
+                <div className="pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground font-mono">
+                  <span>Last updated: {new Date(editingPlatform.updatedAt).toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full">
-            <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-              <Globe className="size-8" />
-            </div>
-            <h2 className="text-xl font-bold mb-2">No Platform Selected</h2>
-            <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Track global freelance marketplaces (Upwork, Fiverr, Toptal, Guru), Egyptian portals (Aykhedmah, Picalica, Tasmeem ME, Mowzaf), and Saudi platforms (صبار, شفتات, بارت تايم, PTway, بحر).
-            </p>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => handleCreateNewPlatform()} className="text-xs">
-                <Plus className="size-4 mr-1.5" /> Add Custom Platform
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleLoadPresets}
-                className="text-xs border-primary/30 text-primary hover:bg-primary/10"
-              >
-                <Sparkles className="size-4 mr-1.5" /> Load All 22 Platforms
-              </Button>
-            </div>
+          <div className="flex-1 flex items-center justify-center h-full text-muted-foreground">
+            Select a platform or create a new one to start editing.
           </div>
         )}
       </SplitLayout>

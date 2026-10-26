@@ -265,17 +265,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen h-dvh w-full overflow-hidden bg-muted/30">
-      {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[100] md:hidden"
-        />
-      )}
+    <TooltipProvider delayDuration={300} skipDelayDuration={150}>
+      <div className="flex h-screen h-dvh w-full overflow-hidden bg-muted/30">
+        {/* Mobile backdrop */}
+        {mobileOpen && (
+          <div
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[100] md:hidden"
+          />
+        )}
 
-      {/* ── Sidebar ──────────────────────────────────── */}
-      <TooltipProvider delayDuration={0}>
+        {/* ── Sidebar ──────────────────────────────────── */}
         <div
           className={cn(
             "fixed md:relative inset-y-0 left-0 z-[110] flex shrink-0 flex-col transition-[width,transform] duration-300 ease-in-out p-2",
@@ -413,7 +413,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
         </div>
-      </TooltipProvider>
 
       {/* ── Main area ────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 p-2 md:pl-0 gap-2">
@@ -452,15 +451,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Right: actions */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Presence indicator */}
-            <TooltipProvider delayDuration={0}>
-              <ErrorBoundary fallback={<span />}>
-                <PresenceIndicator userId={user?.id} />
-              </ErrorBoundary>
-            </TooltipProvider>
+            <ErrorBoundary fallback={<span />}>
+              <PresenceIndicator userId={user?.id} />
+            </ErrorBoundary>
 
             {/* Theme toggle */}
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
+            <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={toggleTheme}
@@ -494,7 +490,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
               {/* Notifications */}
               <div className="relative" ref={notifRef}>
-                <Tooltip>
+                <Tooltip open={notifOpen ? false : undefined}>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => {
@@ -634,7 +630,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Plus className="size-3.5" />
                 <span className="hidden sm:inline">New</span>
               </Link>
-            </TooltipProvider>
           </div>
         </header>
 
@@ -646,5 +641,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
+    </TooltipProvider>
   );
 }

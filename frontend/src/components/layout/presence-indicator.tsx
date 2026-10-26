@@ -36,7 +36,7 @@ export function PresenceIndicator({ userId }: PresenceIndicatorProps) {
 
   return (
     <div className="relative" ref={ref}>
-      <Tooltip>
+      <Tooltip open={open ? false : undefined}>
         <TooltipTrigger asChild>
           <button
             onClick={() => setOpen((o) => !o)}
@@ -57,7 +57,11 @@ export function PresenceIndicator({ userId }: PresenceIndicatorProps) {
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
-          {connected ? `${count} online` : "Connecting…"}
+          {connected
+            ? `${count} user${count !== 1 ? "s" : ""} online`
+            : typeof window !== "undefined" && window.location.hostname.endsWith("vercel.app")
+              ? "Presence offline (serverless)"
+              : "Connecting presence…"}
         </TooltipContent>
       </Tooltip>
 

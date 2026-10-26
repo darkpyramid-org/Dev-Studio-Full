@@ -1,27 +1,27 @@
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import {
+  Wrench,
   Plus,
   Trash2,
   Save,
   Copy,
   Check,
-  CheckCircle2,
   Sparkles,
-  Clock,
   DollarSign,
-  Tag,
-  Search,
-  Filter,
+  Clock,
   Layers,
-  ArrowRight,
-  Briefcase,
-  ChevronRight,
-  ListPlus,
-  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea } from "@/features/tools/shared";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Connector } from "@/types/tools";
 import { newId } from "@/lib/store";
@@ -40,9 +40,12 @@ import {
   InnerSidebar,
   InnerSidebarHeader,
   InnerSidebarSearch,
+  InnerSidebarFilters,
+  InnerSidebarDivider,
   InnerSidebarList,
   InnerSidebarItem,
   InnerSidebarEmpty,
+  InnerSidebarAddButton,
   SplitLayout,
 } from "@/components/layout";
 
@@ -50,7 +53,6 @@ interface ServicesCatalogViewProps {
   connectors: Connector[];
   onUpsert: (connector: Connector) => void;
   onDelete: (id: string) => void;
-  onBulkUpsert?: (items: Partial<Connector>[]) => void;
 }
 
 export function ServicesCatalogView({
@@ -63,29 +65,42 @@ export function ServicesCatalogView({
     [connectors]
   );
 
+  // Deduplicate by normalized name
+  const uniqueServiceConnectors = useMemo(() => {
+    const seen = new Set<string>();
+    const list: Connector[] = [];
+    for (const c of serviceConnectors) {
+      const key = (c.name || "").trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push(c);
+      }
+    }
+    return list;
+  }, [serviceConnectors]);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Editable service state
   const [editingService, setEditingService] = useState<ParsedService | null>(null);
   const [newDeliverableInput, setNewDeliverableInput] = useState("");
-  const [newTagInput, setNewTagInput] = useState("");
   const [copiedProposal, setCopiedProposal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-select first service when list loads or changes
+  // Auto-select first service
   useEffect(() => {
-    if (serviceConnectors.length > 0) {
-      if (!activeId || !serviceConnectors.some((c) => c.id === activeId)) {
-        setActiveId(serviceConnectors[0].id);
+    if (uniqueServiceConnectors.length > 0) {
+      if (!activeId || !uniqueServiceConnectors.some((c) => c.id === activeId)) {
+        setActiveId(uniqueServiceConnectors[0].id);
       }
     } else {
       setActiveId(null);
       setEditingService(null);
     }
-  }, [serviceConnectors, activeId]);
+  }, [uniqueServiceConnectors, activeId]);
 
   // When activeId changes, parse the connector into editable state
   useEffect(() => {
@@ -93,35 +108,50 @@ export function ServicesCatalogView({
       setEditingService(null);
       return;
     }
-    const current = serviceConnectors.find((c) => c.id === activeId);
+    const current = uniqueServiceConnectors.find((c) => c.id === activeId);
     if (current) {
       setEditingService(parseServiceConnector(current));
     }
-  }, [activeId, serviceConnectors]);
+  }, [activeId, uniqueServiceConnectors]);
 
-  // Filtered services for sidebar
+  // Filtered services
   const filteredServices = useMemo(() => {
-    return serviceConnectors.filter((c) => {
+    return uniqueServiceConnectors.filter((c) => {
       const parsed = parseServiceConnector(c);
       const matchesSearch =
         parsed.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         parsed.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         parsed.whatICanDo.some((item) =>
           item.toLowerCase().includes(searchQuery.toLowerCase())
-        ) ||
-        parsed.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        );
 
       const matchesCat =
-        selectedCategory === "All" || parsed.category === selectedCategory;
+        selectedCategory === "all" ||
+        parsed.category.toLowerCase() === selectedCategory.toLowerCase();
 
       return matchesSearch && matchesCat;
     });
-  }, [serviceConnectors, searchQuery, selectedCategory]);
+  }, [uniqueServiceConnectors, searchQuery, selectedCategory]);
 
-  // 1-Click Load All 14 Presets
+  // Category filter items for InnerSidebarFilters
+  const categoryFilters = useMemo(() => {
+    const list = [
+      { label: "All", value: "all", count: uniqueServiceConnectors.length },
+    ];
+    for (const cat of SERVICE_CATEGORIES) {
+      if (cat === "All") continue;
+      const count = uniqueServiceConnectors.filter(
+        (c) => parseServiceConnector(c).category === cat
+      ).length;
+      list.push({ label: cat.split(" ")[0], value: cat, count });
+    }
+    return list;
+  }, [uniqueServiceConnectors]);
+
+  // 1-Click Load All 14 Presets (deduplicated)
   const handleLoadPresets = () => {
     const existingNames = new Set(
-      serviceConnectors.map((s) => s.name.trim().toLowerCase())
+      uniqueServiceConnectors.map((s) => s.name.trim().toLowerCase())
     );
 
     let addedCount = 0;
@@ -148,11 +178,11 @@ export function ServicesCatalogView({
     if (addedCount > 0) {
       toast.success(`Loaded ${addedCount} services into your catalog!`);
     } else {
-      toast.info("All 14 preset services are already in your catalog.");
+      toast.info("All 14 preset services are already loaded.");
     }
   };
 
-  // Create new blank or template service
+  // Create new service
   const handleCreateNewService = (preset?: ServicePreset) => {
     const id = newId("srv");
     const newServiceData: ParsedService = preset
@@ -175,11 +205,11 @@ export function ServicesCatalogView({
           budget: "$500 - $1,000",
           pricingType: "fixed",
           deliveryTime: "3 - 5 business days",
-          description: "Clear overview of the client deliverables and business value provided.",
+          description: "Clear overview of client deliverables and business value provided.",
           whatICanDo: [
             "Project architecture review & planning",
             "Core feature implementation and integration",
-            "Quality assurance, performance testing & client review",
+            "Testing, verification, and final client sign-off",
           ],
           tags: ["Web", "Development"],
           updatedAt: Date.now(),
@@ -192,7 +222,7 @@ export function ServicesCatalogView({
     toast.success(`Created service "${newServiceData.name}"`);
   };
 
-  // Save changes to database
+  // Save changes
   const handleSaveService = () => {
     if (!editingService) return;
     setIsSaving(true);
@@ -207,7 +237,7 @@ export function ServicesCatalogView({
     }
   };
 
-  // Add / Remove Deliverable item
+  // Deliverables
   const handleAddDeliverable = () => {
     if (!newDeliverableInput.trim() || !editingService) return;
     setEditingService({
@@ -231,28 +261,7 @@ export function ServicesCatalogView({
     setEditingService({ ...editingService, whatICanDo: next });
   };
 
-  // Add / Remove Tags
-  const handleAddTag = () => {
-    if (!newTagInput.trim() || !editingService) return;
-    const tag = newTagInput.trim();
-    if (!editingService.tags.includes(tag)) {
-      setEditingService({
-        ...editingService,
-        tags: [...editingService.tags, tag],
-      });
-    }
-    setNewTagInput("");
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    if (!editingService) return;
-    setEditingService({
-      ...editingService,
-      tags: editingService.tags.filter((t) => t !== tagToRemove),
-    });
-  };
-
-  // Copy Client Proposal to Clipboard
+  // Copy Proposal
   const handleCopyProposal = () => {
     if (!editingService) return;
     const text = `
@@ -265,13 +274,8 @@ export function ServicesCatalogView({
 📋 WHAT I WILL DO FOR YOU:
 ${editingService.whatICanDo.map((item, i) => `  ${i + 1}. ${item}`).join("\n")}
 
-🛠️ TECH STACK & TOOLS:
-${editingService.tags.map((t) => `  • ${t}`).join("\n")}
-
-📝 OVERVIEW & APPROACH:
+📝 OVERVIEW:
 ${editingService.description}
-─────────────────────────────────────────────
-Ready to get started? Let's connect and discuss your project timeline!
 `.trim();
 
     navigator.clipboard.writeText(text);
@@ -280,20 +284,16 @@ Ready to get started? Let's connect and discuss your project timeline!
     setTimeout(() => setCopiedProposal(false), 2500);
   };
 
-  const ActiveIcon = editingService
-    ? getServiceIcon(editingService.name, editingService.category)
-    : Briefcase;
-
   return (
     <div className="flex-1 min-h-0 h-full overflow-hidden">
       <SplitLayout
-        sidebarWidth="lg:w-[320px]"
+        sidebarWidth="lg:w-[260px]"
         sidebar={
           <InnerSidebar>
             <InnerSidebarHeader
-              icon={<Briefcase className="size-4 text-primary" />}
-              title="My Services"
-              count={serviceConnectors.length}
+              icon={<Wrench className="size-3.5" />}
+              title="Services"
+              count={uniqueServiceConnectors.length}
               onAdd={() => handleCreateNewService()}
               addLabel="New Service"
             />
@@ -301,28 +301,22 @@ Ready to get started? Let's connect and discuss your project timeline!
             <InnerSidebarSearch
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search services or capabilities..."
+              placeholder="Search services..."
             />
 
-            {/* Category Filter Pills */}
-            <div className="px-2 pb-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 border-b border-border/50">
-              {SERVICE_CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="pt-1.5 pb-1">
+              <InnerSidebarFilters
+                wrap={true}
+                filters={categoryFilters}
+                active={selectedCategory}
+                onChange={setSelectedCategory}
+              />
             </div>
 
-            {/* 1-Click Load 14 Presets Action Bar */}
-            {serviceConnectors.length < 14 && (
+            <InnerSidebarDivider />
+
+            {/* Presets loader pill if missing */}
+            {uniqueServiceConnectors.length < 14 && (
               <div className="p-2 border-b border-border/40 bg-primary/5">
                 <Button
                   size="sm"
@@ -330,7 +324,7 @@ Ready to get started? Let's connect and discuss your project timeline!
                   onClick={handleLoadPresets}
                   className="w-full text-xs font-medium flex items-center justify-center gap-1.5 h-8 border-primary/30 text-primary hover:bg-primary/10"
                 >
-                  <Sparkles className="size-3.5" /> Load All 14 Preset Services
+                  <Sparkles className="size-3.5" /> Load All 14 Services
                 </Button>
               </div>
             )}
@@ -341,9 +335,9 @@ Ready to get started? Let's connect and discuss your project timeline!
                 <div className="p-3 text-center">
                   <InnerSidebarEmpty
                     message={
-                      searchQuery || selectedCategory !== "All"
-                        ? "No matching services found"
-                        : "No services cataloged yet"
+                      searchQuery || selectedCategory !== "all"
+                        ? "No matching services"
+                        : "No services yet"
                     }
                   />
                   <Button
@@ -358,7 +352,6 @@ Ready to get started? Let's connect and discuss your project timeline!
               ) : (
                 filteredServices.map((c) => {
                   const parsed = parseServiceConnector(c);
-                  const Icon = getServiceIcon(parsed.name, parsed.category);
                   const isSelected = c.id === activeId;
 
                   return (
@@ -368,34 +361,16 @@ Ready to get started? Let's connect and discuss your project timeline!
                       onClick={() => setActiveId(c.id)}
                       onDelete={() => setPendingDeleteId(c.id)}
                     >
-                      <div className="flex items-center gap-2.5 w-full min-w-0">
-                        <div
-                          className={`size-7 rounded-md flex items-center justify-center shrink-0 ${
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground group-hover:text-foreground group-hover:bg-muted/80"
-                          }`}
-                        >
-                          <Icon className="size-3.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs truncate">
+                          {parsed.name}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="font-medium text-xs truncate">
-                              {parsed.name}
-                            </span>
-                            <span className="text-[10px] bg-muted/80 px-1 py-0.2 rounded text-muted-foreground shrink-0 font-mono">
-                              {parsed.whatICanDo.length} tasks
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                            <span className="truncate max-w-[110px] font-mono text-primary/80">
-                              {parsed.budget}
-                            </span>
-                            <span>•</span>
-                            <span className="truncate max-w-[90px]">
-                              {parsed.category}
-                            </span>
-                          </div>
+                        <div className="truncate text-[10px] text-muted-foreground mt-0.5">
+                          {parsed.category}
+                        </div>
+                        <div className="text-[9px] text-muted-foreground/60 mt-0.5 font-mono flex items-center justify-between">
+                          <span>{parsed.budget}</span>
+                          <span>{parsed.whatICanDo.length} tasks</span>
                         </div>
                       </div>
                     </InnerSidebarItem>
@@ -403,43 +378,33 @@ Ready to get started? Let's connect and discuss your project timeline!
                 })
               )}
             </InnerSidebarList>
+
+            <InnerSidebarAddButton
+              onClick={() => handleCreateNewService()}
+              label="New Service"
+            />
           </InnerSidebar>
         }
       >
         {/* Main Content Area */}
         {editingService ? (
-          <div className="h-full overflow-y-auto scrollbar-thin p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
-            {/* Top Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
-              <div className="flex items-center gap-3">
-                <div className="size-11 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shadow-xs">
-                  <ActiveIcon className="size-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs uppercase tracking-wider font-semibold text-primary">
-                      {editingService.category}
-                    </span>
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-mono">
-                      {editingService.budget}
-                    </span>
-                  </div>
-                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                    {editingService.name}
-                  </h1>
-                </div>
-              </div>
+          <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-10 h-full flex flex-col overflow-hidden">
+            {/* Top Action Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl sm:text-2xl font-semibold capitalize">
+                {editingService.name} Details
+              </h2>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                 <Button
-                  size="sm"
                   variant="outline"
+                  size="sm"
                   onClick={handleCopyProposal}
                   className="flex items-center gap-1.5 text-xs h-9"
                 >
                   {copiedProposal ? (
                     <>
-                      <Check className="size-3.5 text-green-500" /> Copied!
+                      <Check className="size-3.5 text-emerald-500" /> Copied!
                     </>
                   ) : (
                     <>
@@ -449,8 +414,8 @@ Ready to get started? Let's connect and discuss your project timeline!
                 </Button>
 
                 <Button
-                  size="sm"
                   variant="destructive"
+                  size="sm"
                   onClick={() => setPendingDeleteId(editingService.id)}
                   className="flex items-center gap-1.5 text-xs h-9"
                 >
@@ -458,128 +423,107 @@ Ready to get started? Let's connect and discuss your project timeline!
                 </Button>
 
                 <Button
-                  size="sm"
                   onClick={handleSaveService}
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 text-xs h-9 font-semibold"
+                  className="flex items-center gap-2 text-xs h-9"
                 >
-                  <Save className="size-3.5" /> {isSaving ? "Saving..." : "Save Service"}
+                  <Save className="size-4" /> {isSaving ? "Saving..." : "Save Details"}
                 </Button>
               </div>
             </div>
 
-            {/* Quick Template Switcher */}
-            <div className="p-3 bg-muted/30 border border-border/50 rounded-xl flex items-center justify-between gap-3 text-xs">
-              <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
-                <Sparkles className="size-3.5 text-amber-500" /> Apply a preset template:
-              </span>
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                {PRESET_SERVICES.slice(0, 7).map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setEditingService({
-                        ...editingService,
-                        name: p.name,
-                        category: p.category,
-                        budget: p.budget,
-                        pricingType: p.pricingType,
-                        deliveryTime: p.deliveryTime,
-                        description: p.description,
-                        whatICanDo: [...p.whatICanDo],
-                        tags: [...p.tags],
-                      });
-                      toast.info(`Applied template: ${p.name}`);
-                    }}
-                    className="text-[11px] px-2 py-1 rounded-md bg-card border border-border/60 hover:border-primary/50 hover:bg-muted transition-colors whitespace-nowrap"
-                  >
-                    {p.name.split(" ")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Section 1: Service Name & Budget Specs */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <DollarSign className="size-4 text-primary" /> Service Offering & Budget
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-medium text-foreground">
-                    Service Title
-                  </label>
+            {/* Form & Notes Content */}
+            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 scrollbar-thin">
+              {/* Form Card */}
+              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-4">
+                {/* Service Name */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <Wrench className="size-4" /> Service Title:
+                  </span>
                   <Input
                     type="text"
                     value={editingService.name}
                     onChange={(e) =>
                       setEditingService({ ...editingService, name: e.target.value })
                     }
+                    className="flex-1 font-medium"
                     placeholder="e.g. Search Engine Optimization (SEO)"
-                    className="font-medium"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Domain / Category
-                  </label>
-                  <select
-                    value={editingService.category}
-                    onChange={(e) =>
-                      setEditingService({ ...editingService, category: e.target.value })
-                    }
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {SERVICE_CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                {/* Domain / Category (Reusable Select) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <Layers className="size-4" /> Domain / Category:
+                  </span>
+                  <div className="flex-1">
+                    <Select
+                      value={editingService.category}
+                      onValueChange={(cat) =>
+                        setEditingService({ ...editingService, category: cat })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SERVICE_CATEGORIES.filter((c) => c !== "All").map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">
-                    Pricing Model
-                  </label>
-                  <select
-                    value={editingService.pricingType}
-                    onChange={(e) =>
-                      setEditingService({
-                        ...editingService,
-                        pricingType: e.target.value as any,
-                      })
-                    }
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring capitalize"
-                  >
-                    <option value="fixed">Fixed Price</option>
-                    <option value="hourly">Hourly Rate</option>
-                    <option value="monthly">Monthly Retainer</option>
-                    <option value="starting_at">Starting At</option>
-                  </select>
+                {/* Pricing Model (Reusable Select) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <DollarSign className="size-4" /> Pricing Model:
+                  </span>
+                  <div className="flex-1">
+                    <Select
+                      value={editingService.pricingType}
+                      onValueChange={(val: any) =>
+                        setEditingService({ ...editingService, pricingType: val })
+                      }
+                    >
+                      <SelectTrigger className="w-full capitalize">
+                        <SelectValue placeholder="Select pricing model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed Price</SelectItem>
+                        <SelectItem value="hourly">Hourly Rate</SelectItem>
+                        <SelectItem value="monthly">Monthly Retainer</SelectItem>
+                        <SelectItem value="starting_at">Starting At</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <DollarSign className="size-3 text-emerald-500" /> Budget / Rate
-                  </label>
+                {/* Budget / Price */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <DollarSign className="size-4" /> Budget / Rate:
+                  </span>
                   <Input
                     type="text"
                     value={editingService.budget}
                     onChange={(e) =>
                       setEditingService({ ...editingService, budget: e.target.value })
                     }
+                    className="flex-1 font-mono"
                     placeholder="e.g. $450 - $1,200 or $75/hr"
-                    className="font-mono"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <Clock className="size-3 text-blue-500" /> Delivery Turnaround
-                  </label>
+                {/* Turnaround / Delivery Time */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground sm:w-36 shrink-0 flex items-center gap-2">
+                    <Clock className="size-4" /> Delivery Time:
+                  </span>
                   <Input
                     type="text"
                     value={editingService.deliveryTime}
@@ -589,231 +533,97 @@ Ready to get started? Let's connect and discuss your project timeline!
                         deliveryTime: e.target.value,
                       })
                     }
+                    className="flex-1"
                     placeholder="e.g. 3 - 5 business days"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Section 2: "What I Can Do" (Scope & Deliverables) */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-500" /> What I Can Do (Scope & Deliverables)
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Clear list of features, audit steps, and deliverables you provide to clients.
-                  </p>
+              {/* What I Can Do (Deliverables) Card */}
+              <div className="bg-card border border-border rounded-lg p-4 sm:p-6 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <CheckCircle2 className="size-4 text-emerald-500" /> What I Can Do (Deliverables):
+                  </span>
+                  <span className="text-[11px] font-mono text-muted-foreground">
+                    {editingService.whatICanDo.length} items
+                  </span>
                 </div>
-                <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full self-start font-semibold">
-                  {editingService.whatICanDo.length} Deliverables
-                </span>
-              </div>
 
-              {/* Deliverables List */}
-              <div className="space-y-2">
-                {editingService.whatICanDo.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 p-2 bg-muted/40 rounded-lg border border-border/40 group hover:border-border transition-colors"
-                  >
-                    <div className="size-6 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-                      <Check className="size-3.5" />
+                <div className="space-y-2">
+                  {editingService.whatICanDo.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 p-2 bg-muted/40 rounded-lg border border-border/40 group hover:border-border transition-colors"
+                    >
+                      <Check className="size-3.5 text-emerald-500 shrink-0" />
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={(e) => handleUpdateDeliverable(idx, e.target.value)}
+                        className="flex-1 bg-transparent text-sm focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDeliverable(idx)}
+                        className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors opacity-70 group-hover:opacity-100"
+                        title="Remove deliverable"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
                     </div>
-                    <input
-                      type="text"
-                      value={item}
-                      onChange={(e) => handleUpdateDeliverable(idx, e.target.value)}
-                      className="flex-1 bg-transparent text-sm focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveDeliverable(idx)}
-                      className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors opacity-70 group-hover:opacity-100"
-                      title="Remove deliverable"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Add New Deliverable */}
-              <div className="flex items-center gap-2 pt-2">
-                <Input
-                  type="text"
-                  value={newDeliverableInput}
-                  onChange={(e) => setNewDeliverableInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddDeliverable();
-                    }
-                  }}
-                  placeholder="Type a new deliverable (e.g. Full technical SEO crawl & sitemap generation)..."
-                  className="text-sm"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleAddDeliverable}
-                  className="shrink-0 flex items-center gap-1.5 text-xs h-9"
-                >
-                  <Plus className="size-3.5" /> Add
-                </Button>
-              </div>
-            </div>
-
-            {/* Section 3: Skills, Tools & Tags */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Tag className="size-4 text-primary" /> Skills, Tools & Technologies
-              </h2>
-
-              <div className="flex flex-wrap items-center gap-1.5 min-h-[32px]">
-                {editingService.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 text-xs font-medium bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-md"
+                <div className="flex items-center gap-2 pt-1">
+                  <Input
+                    type="text"
+                    value={newDeliverableInput}
+                    onChange={(e) => setNewDeliverableInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddDeliverable();
+                      }
+                    }}
+                    placeholder="Type new deliverable and press Enter..."
+                    className="text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAddDeliverable}
+                    className="shrink-0 text-xs h-9"
                   >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive ml-0.5"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                    <Plus className="size-3.5 mr-1" /> Add
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <Input
-                  type="text"
-                  value={newTagInput}
-                  onChange={(e) => setNewTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
+              {/* Notes & Details Card */}
+              <div className="flex-1 bg-card border border-border rounded-lg p-6 flex flex-col gap-4 min-h-[200px]">
+                <div className="flex-1 flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground mb-2 block">
+                    Notes & Details:
+                  </span>
+                  <TextArea
+                    value={editingService.description}
+                    onChange={(e) =>
+                      setEditingService({ ...editingService, description: e.target.value })
                     }
-                  }}
-                  placeholder="Add tool or skill tag (e.g. Next.js, Stripe, Docker, Lighthouse)..."
-                  className="text-sm"
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={handleAddTag}
-                  className="shrink-0 text-xs h-9"
-                >
-                  <Plus className="size-3.5 mr-1" /> Add Tag
-                </Button>
-              </div>
-            </div>
-
-            {/* Section 4: Detailed Scope Description & Strategy Notes */}
-            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Layers className="size-4 text-primary" /> Service Overview & Strategy Notes
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                In-depth context, communication channels, client prerequisites, or execution milestones.
-              </p>
-              <TextArea
-                value={editingService.description}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, description: e.target.value })
-                }
-                rows={4}
-                className="w-full text-sm leading-relaxed"
-                placeholder="Describe the business value, process, and prerequisites for this service..."
-              />
-            </div>
-
-            {/* Section 5: Client-Ready Proposal Card */}
-            <div className="bg-gradient-to-br from-primary/5 via-card to-card border border-primary/20 rounded-xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-amber-500" />
-                  <h3 className="font-semibold text-sm">Client-Ready Proposal Card</h3>
+                    className="w-full flex-1 resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none text-sm leading-relaxed bg-transparent min-h-[100px]"
+                    placeholder="Add notes about client scope, prerequisites, or implementation strategy..."
+                  />
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCopyProposal}
-                  className="h-8 text-xs flex items-center gap-1.5"
-                >
-                  {copiedProposal ? (
-                    <>
-                      <Check className="size-3.5 text-green-500" /> Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="size-3.5" /> Copy Proposal Summary
-                    </>
-                  )}
-                </Button>
-              </div>
 
-              <div className="bg-background/80 border border-border/80 rounded-lg p-4 font-sans text-xs space-y-3">
-                <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                  <span className="font-bold text-sm text-foreground">
-                    {editingService.name}
-                  </span>
-                  <span className="font-mono text-primary font-bold">
-                    {editingService.budget}
-                  </span>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  {editingService.description}
-                </p>
-                <div className="space-y-1 pt-1">
-                  <span className="font-semibold text-foreground block">
-                    What is included:
-                  </span>
-                  <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
-                    {editingService.whatICanDo.slice(0, 4).map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                    {editingService.whatICanDo.length > 4 && (
-                      <li className="text-primary font-medium">
-                        + {editingService.whatICanDo.length - 4} more deliverables
-                      </li>
-                    )}
-                  </ul>
-                </div>
-                <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>Turnaround: {editingService.deliveryTime}</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                    Active & Available for Hire
-                  </span>
+                <div className="pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground font-mono">
+                  <span>Last updated: {new Date(editingService.updatedAt).toLocaleString()}</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full">
-            <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-              <Briefcase className="size-8" />
-            </div>
-            <h2 className="text-xl font-bold mb-2">No Service Selected</h2>
-            <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Create your service catalog with what you can do for clients (SEO, domain, responsive design, security, UI/UX, landing pages, server DevOps, payments, AI, and more).
-            </p>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => handleCreateNewService()} className="text-xs">
-                <Plus className="size-4 mr-1.5" /> Create Custom Service
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleLoadPresets}
-                className="text-xs border-primary/30 text-primary hover:bg-primary/10"
-              >
-                <Sparkles className="size-4 mr-1.5" /> Load 14 Presets
-              </Button>
-            </div>
+          <div className="flex-1 flex items-center justify-center h-full text-muted-foreground">
+            Select a service or create a new one to start editing.
           </div>
         )}
       </SplitLayout>
