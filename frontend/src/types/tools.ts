@@ -75,6 +75,9 @@ export interface Connector {
   email?: string;
   phone?: string;
   notes?: string;
+  category?: string;
+  tags?: string[];
+  slug?: string;
   createdAt: number;
   updatedAt: number;
 }

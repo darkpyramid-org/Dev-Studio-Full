@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useForge, newId } from "@/lib/store";
 import { ConnectorsSidebar } from "@/features/connectors/connectors-sidebar";
 import { ConnectorEditor } from "@/components/crud/connectors";
+import { ServicesCatalogView } from "@/features/connectors/services-catalog-view";
 import type { Connector } from "@/types/tools";
 import { CONNECTORS_TABS } from "@/constants";
 import { ConnectorType } from "@shared/enums";
@@ -17,7 +18,7 @@ const connectorsSearchSchema = z.object({
 export const Route = createFileRoute("/connectors")({
   validateSearch: connectorsSearchSchema,
   head: () => ({
-    meta: [{ title: "Connectors — Dev Studio" }],
+    meta: [{ title: "Connectors & Services — Dev Studio" }],
   }),
   component: ConnectorsPage,
 });
@@ -57,8 +58,8 @@ function ConnectorsPage() {
         ? "New Company"
         : tab === "freelance"
           ? "New Freelance Contact"
-          : tab === "services"
-            ? "New Service Provider"
+          : tab === "clients"
+            ? "New Client"
             : "New Contact";
 
     const next: Connector = {
@@ -98,7 +99,7 @@ function ConnectorsPage() {
   return (
     <PageContainer>
       <PageSection>
-        <PageHeader icon={Users} title="Connectors" className="mb-4" />
+        <PageHeader icon={Users} title="Connectors & Services" className="mb-4" />
         <TabNav
           tabs={CONNECTORS_TABS.map((t) => ({
             ...t,
@@ -109,29 +110,37 @@ function ConnectorsPage() {
       </PageSection>
 
       <div className="flex-1 min-h-0 overflow-hidden">
-        <SplitLayout
-          sidebar={
-            <ConnectorsSidebar
-              type={tab}
-              connectors={connectors}
-              activeConnectorId={activeConnectorId}
-              onSelectConnector={setActiveConnectorId}
-              onNewConnector={handleNewConnector}
-              onDeleteConnector={deleteConnector}
-            />
-          }
-          sidebarWidth="lg:w-[260px]"
-          className=""
-        >
-          <div className="overflow-y-auto scrollbar-thin h-full w-full">
-            <ConnectorEditor
-              type={tab}
-              activeConnector={activeConnector}
-              onUpdateConnector={handleUpdateConnector}
-              onSave={handleSaveConnector}
-            />
-          </div>
-        </SplitLayout>
+        {tab === "services" ? (
+          <ServicesCatalogView
+            connectors={connectors}
+            onUpsert={upsertConnector}
+            onDelete={deleteConnector}
+          />
+        ) : (
+          <SplitLayout
+            sidebar={
+              <ConnectorsSidebar
+                type={tab}
+                connectors={connectors}
+                activeConnectorId={activeConnectorId}
+                onSelectConnector={setActiveConnectorId}
+                onNewConnector={handleNewConnector}
+                onDeleteConnector={deleteConnector}
+              />
+            }
+            sidebarWidth="lg:w-[260px]"
+            className=""
+          >
+            <div className="overflow-y-auto scrollbar-thin h-full w-full">
+              <ConnectorEditor
+                type={tab}
+                activeConnector={activeConnector}
+                onUpdateConnector={handleUpdateConnector}
+                onSave={handleSaveConnector}
+              />
+            </div>
+          </SplitLayout>
+        )}
       </div>
     </PageContainer>
   );
