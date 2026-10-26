@@ -22,6 +22,7 @@ import {
   globalErrorHandler,
 } from "./presentation/middleware/error.js";
 
+import { pool } from "./infrastructure/database/index.js";
 import { runSeeding } from "./infrastructure/database/seed.js";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -58,6 +59,45 @@ setupGooglePassport();
 // --- Docs & Routes ---
 setupSwagger(app);
 registerRoutes(app);
+
+// --- Health Check handler ---
+app.get("/api/health", async (_req: Request, res: Response) => {
+  try {
+    const isDbConfigured = Boolean(
+      process.env.DATABASE_URL ||
+        process.env.POSTGRES_URL ||
+        process.env.POSTGRES_PRISMA_URL ||
+        process.env.POSTGRES_URL_NON_POOLING,
+    );
+
+    let dbStatus = "not_configured";
+    let dbError: string | null = null;
+
+    if (isDbConfigured) {
+      try {
+        await pool.query("SELECT 1");
+        dbStatus = "connected";
+      } catch (err: unknown) {
+        dbStatus = "error";
+        dbError = (err as Error)?.message || String(err);
+      }
+    }
+
+    const statusCode = dbStatus === "connected" ? 200 : 503;
+    res.status(statusCode).json({
+      status: dbStatus === "connected" ? "ok" : "degraded",
+      database: {
+        configured: isDbConfigured,
+        status: dbStatus,
+        ...(dbError ? { error: dbError } : {}),
+      },
+      env: process.env.NODE_ENV ?? "development",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ status: "error", error: (err as Error)?.message || String(err) });
+  }
+});
 
 // --- Root handler ---
 app.get("/", (_req: Request, res: Response) => {
