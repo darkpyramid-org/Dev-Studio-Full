@@ -22,19 +22,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
       - name: Run ESLint
-        run: npm run lint
+        run: npm run lint:frontend
 
-      - name: Type check
-        run: npx tsc --noEmit
+      - name: Type check backend
+        run: npm exec --prefix backend -- tsc --noEmit --project backend/tsconfig.json
 
-      - name: Build
-        run: npm run build
+      - name: Type check frontend
+        run: npm exec --prefix frontend -- tsc --noEmit --project frontend/tsconfig.json
+
+      - name: Build frontend
+        run: npm run build:frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+
+      - name: Build backend
+        run: npm run build:backend
 
       - name: Deploy to Cloudflare Pages
         run: |
@@ -43,7 +55,7 @@ jobs:
             echo "   Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub repository secrets to enable."
             exit 0
           fi
-          npx wrangler pages deploy dist --project-name dev-studio
+          npx wrangler pages deploy frontend/dist --project-name dev-studio
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
