@@ -50,7 +50,7 @@ export function attachPresenceWS(server: HttpServer): WebSocketServer {
 
     resetHeartbeatTimer(conn);
 
-    ws.on("message", async (raw) => {
+    ws.on("message", async (raw: { toString(): string }) => {
       let msg: Record<string, unknown>;
       try {
         msg = JSON.parse(raw.toString()) as Record<string, unknown>;
@@ -85,7 +85,7 @@ export function attachPresenceWS(server: HttpServer): WebSocketServer {
       connections.delete(ws);
     });
 
-    ws.on("error", (err) => {
+    ws.on("error", (err: Error) => {
       logger.warn("Presence WS error", { message: err.message });
     });
   });

@@ -11,6 +11,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "drizzle.config.ts",
     "src/tests/**",
     "src/**/*.test.ts",
     "vitest.config.ts"
