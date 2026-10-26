@@ -23,7 +23,10 @@ import {
 } from "./presentation/middleware/error.js";
 
 import { pool } from "./infrastructure/database/index.js";
-import { runSeeding } from "./infrastructure/database/seed.js";
+
+// On Vercel, seeding is handled by the CI db-migrate job (drizzle-kit push).
+// Lazy-importing seed avoids loading all seed data on every serverless cold-start.
+const isVercel = Boolean(process.env.VERCEL);
 
 const isProd = process.env.NODE_ENV === "production";
 const PORT = Number(process.env.PORT || 5000);
@@ -101,6 +104,7 @@ app.get("/api/health", async (_req: Request, res: Response) => {
         ...(dbError ? { error: dbError } : {}),
       },
       env: process.env.NODE_ENV ?? "development",
+      isVercel,
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {
@@ -122,21 +126,31 @@ app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
 async function startServer() {
-  try {
-    logger.info("Checking and seeding database...");
-    await runSeeding();
-    logger.info("Seeding check complete.");
-  } catch (err) {
-    logger.error("Database seeding failed on startup", { err });
+  // Skip seeding on Vercel — the CI db-migrate job runs drizzle-kit push before
+  // each deployment, ensuring tables exist without blocking every cold-start.
+  // Without this guard, every Vercel cold-start tries to connect to the DB for
+  // seeding, waits up to 10 s on a missing DATABASE_URL, and returns 500 errors.
+  if (!isVercel) {
+    try {
+      const { runSeeding } = await import("./infrastructure/database/seed.js");
+      logger.info("Checking and seeding database...");
+      await runSeeding();
+      logger.info("Seeding check complete.");
+    } catch (err) {
+      logger.error("Database seeding failed on startup", { err });
+    }
   }
 
-  // Only start the listener if we're not running on Vercel
-  if (!process.env.VERCEL) {
+  // Only start the HTTP listener when not running on Vercel
+  if (!isVercel) {
     const httpServer = createServer(app);
     attachPresenceWS(httpServer);
 
     httpServer.listen(PORT, "0.0.0.0", () => {
-      logger.info(`Dev Studio running on port ${PORT}`, { port: PORT, env: process.env.NODE_ENV ?? "development" });
+      logger.info(`Dev Studio running on port ${PORT}`, {
+        port: PORT,
+        env: process.env.NODE_ENV ?? "development",
+      });
     });
   }
 }

@@ -46,7 +46,7 @@ const requiresTls =
 
 export const pool = new Pool({
   connectionString,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000, // Fail fast — avoids 10 s hangs on missing DATABASE_URL
   // Managed PostgreSQL providers require TLS. Preserve sslmode=require semantics
   // after stripping that parameter to avoid node-postgres connection warnings.
   ssl: requiresTls ? { rejectUnauthorized: false } : undefined,
