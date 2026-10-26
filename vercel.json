@@ -13,9 +13,10 @@
       "src": "backend/src/index.ts",
       "use": "@vercel/node",
       "config": {
+        "maxDuration": 30,
         "includeFiles": [
-          "backend/src/infrastructure/static/**",
-          "backend/src/infrastructure/database/drizzle/**"
+          "backend/src/infrastructure/static/skill-areas.json",
+          "backend/src/presentation/docs/swagger-spec.json"
         ]
       }
     }

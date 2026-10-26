@@ -20,6 +20,10 @@ function makeOpts() {
     maxRetriesPerRequest: 3,
     enableOfflineQueue: false,
     connectTimeout: 5_000,
+    // lazyConnect: true means ioredis will NOT connect until the first command.
+    // This is critical for Vercel serverless cold-starts — without it, an eager
+    // connect() call blocks for up to 5 s when REDIS_URL points to an unreachable
+    // host, causing every cold-start to time out before serving any request.
     lazyConnect: true,
   } as const;
 }
@@ -33,9 +37,10 @@ function createClient(name: string): Redis | null {
     logger.warn(`Redis ${name} error`, { message: err.message }),
   );
 
-  client.connect().catch((err: Error) =>
-    logger.warn(`Redis ${name} initial connect failed`, { message: err.message }),
-  );
+  // Do NOT call client.connect() here.
+  // lazyConnect: true defers connection until the first command is issued.
+  // Calling connect() eagerly would negate the lazy benefit and re-introduce
+  // the cold-start hang on Vercel when Redis is unavailable.
 
   return client;
 }

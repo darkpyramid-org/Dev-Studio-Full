@@ -44,12 +44,19 @@ const requiresTls =
   rawUrl.includes("supabase.") ||
   rawUrl.includes("pooler.supabase.com");
 
+// On Vercel, many function instances run in parallel — each must hold very few
+// connections to avoid exhausting the database connection limit (Supabase free: 25).
+const isVercelRuntime = Boolean(process.env.VERCEL);
+
 export const pool = new Pool({
   connectionString,
   connectionTimeoutMillis: 5000, // Fail fast — avoids 10 s hangs on missing DATABASE_URL
   // Managed PostgreSQL providers require TLS. Preserve sslmode=require semantics
   // after stripping that parameter to avoid node-postgres connection warnings.
   ssl: requiresTls ? { rejectUnauthorized: false } : undefined,
+  // Limit connections per serverless instance to prevent connection exhaustion.
+  // Vercel can run many instances simultaneously; each must use very few connections.
+  max: isVercelRuntime ? 2 : 10,
 });
 
 export const db = drizzle(pool, { schema });
