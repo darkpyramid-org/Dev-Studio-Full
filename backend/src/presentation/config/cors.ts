@@ -8,7 +8,7 @@ const explicitOrigins = [
   "http://localhost:5000",
   "http://127.0.0.1:5173",
   // Canonical production frontend URL
-  "https://dev-studio-full.vercel.app",
+  "https://ms-dev-studio.vercel.app",
   // Any custom frontend URL set in Vercel env vars
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
@@ -25,8 +25,8 @@ export const corsOptions = cors({
     if (explicitOrigins.includes(origin)) return callback(null, true);
 
     // Allow all Vercel preview/deployment URLs for this project
-    // e.g. dev-studio-full-abc123-org.vercel.app, dev-studio-full.vercel.app
-    if (/^https:\/\/dev-studio-full[a-z0-9-]*\.vercel\.app$/.test(origin)) {
+    // e.g. ms-dev-studio-abc123-org.vercel.app, ms-dev-studio.vercel.app
+    if (/^https:\/\/ms-dev-studio[a-z0-9-]*\.vercel\.app$/.test(origin)) {
       return callback(null, true);
     }
 
