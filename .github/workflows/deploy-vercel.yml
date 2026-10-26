@@ -43,19 +43,31 @@ jobs:
         run: |
           npm install -g vercel@latest
 
-          # If org/project IDs are available, link first for explicit project targeting.
-          # Otherwise, vercel deploy auto-discovers the project from vercel.json.
-          if [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "Linking project via VERCEL_ORG_ID / VERCEL_PROJECT_ID..."
-            vercel link --yes \
-              --token=${{ secrets.VERCEL_TOKEN }} \
-              --scope=${{ secrets.VERCEL_ORG_ID }} \
-              --project=${{ secrets.VERCEL_PROJECT_ID }}
+          # ── Diagnostics (non-sensitive) ──
+          # Shows which account/teams/projects the token can actually access,
+          # so a wrong VERCEL_ORG_ID / VERCEL_PROJECT_ID secret is easy to spot.
+          echo "› Token identity:"
+          vercel whoami --token="$VERCEL_TOKEN" || true
+          echo "› Teams accessible to this token:"
+          vercel teams ls --token="$VERCEL_TOKEN" || true
+          echo "› Projects accessible to this token:"
+          vercel projects ls --token="$VERCEL_TOKEN" || true
+
+          # ── Link ──
+          # Prefer explicit org/project targeting; if the configured scope is
+          # not resolvable (bad VERCEL_ORG_ID), retry without --scope so the
+          # deploy still targets the token's default team.
+          if ! vercel link --yes \
+               --token="$VERCEL_TOKEN" \
+               --scope="$VERCEL_ORG_ID" \
+               --project="$VERCEL_PROJECT_ID"; then
+            echo "⚠️  Explicit link failed (scope '$VERCEL_ORG_ID' not resolvable by this token)."
+            echo "    Retrying with the token's default scope..."
+            vercel link --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
           fi
 
           echo "Deploying to production..."
-          vercel deploy --prod --yes \
-            --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           # Optional — only needed for explicit project linking
