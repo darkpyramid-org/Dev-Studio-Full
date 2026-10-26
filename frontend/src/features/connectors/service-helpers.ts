@@ -35,7 +35,8 @@ export interface ParsedService {
 export function parseServiceConnector(c: Connector): ParsedService {
   let description = "";
   let whatICanDo: string[] = [];
-  let budget = c.email || "";
+  // Only use c.email as budget if it's not actually an email address
+  let budget = c.email && !c.email.includes("@") ? c.email : "";
   let deliveryTime = c.phone || "";
   let pricingType: "fixed" | "hourly" | "monthly" | "starting_at" = "fixed";
 
@@ -46,7 +47,7 @@ export function parseServiceConnector(c: Connector): ParsedService {
         const parsed = JSON.parse(trimmed);
         if (typeof parsed.description === "string") description = parsed.description;
         if (Array.isArray(parsed.whatICanDo)) whatICanDo = parsed.whatICanDo;
-        if (parsed.budget) budget = parsed.budget;
+        if (parsed.budget && !parsed.budget.includes("@")) budget = parsed.budget;
         if (parsed.deliveryTime) deliveryTime = parsed.deliveryTime;
         if (parsed.pricingType) pricingType = parsed.pricingType;
       } catch {
