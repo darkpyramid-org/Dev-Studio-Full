@@ -41,8 +41,13 @@ async function checkSchemaOnDemand() {
   if (schemaEnsured) return;
   if (!schemaInitPromise) {
     schemaInitPromise = ensureDatabaseTables(pool)
-      .then(() => {
-        schemaEnsured = true;
+      .then((res) => {
+        if (res.created) {
+          schemaEnsured = true;
+        }
+        if (res.error) {
+          logger.warn(`[db] Schema initialization warning: ${res.error}`);
+        }
       })
       .finally(() => {
         schemaInitPromise = null;
@@ -97,17 +102,10 @@ registerRoutes(app);
 app.all("/api/admin/migrate", async (_req: Request, res: Response) => {
   try {
     schemaEnsured = false;
-    await checkSchemaOnDemand();
-    const tablesResult = await pool.query(
-      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
-    );
-    res.json({
-      success: true,
-      tablesCount: tablesResult.rows.length,
-      tables: tablesResult.rows.map((r: { table_name: string }) => r.table_name),
-    });
+    const result = await ensureDatabaseTables(pool);
+    res.json(result);
   } catch (err: unknown) {
-    res.status(500).json({ success: false, error: (err as Error)?.message || String(err) });
+    res.status(500).json({ created: false, error: (err as Error)?.message || String(err) });
   }
 });
 
