@@ -1,3 +1,7 @@
+export { CrudDialog } from "./crud-dialog";
+export { DeleteDialog } from "./delete-dialog";
+export type { DeleteDialogProps } from "./delete-dialog";
+
 export { AddTaskForm, EditTaskDialog } from "./planner";
 export { QAEditorDialog } from "./interview";
 export { JobEditor, OfferEditor, ServiceEditor } from "./jobs";

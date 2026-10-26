@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import { Search, ChevronRight, Sparkles, Plus, GraduationCap } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SplitLayout } from "../../components/layout";
 import { useForge } from "@/lib/store";
 import { QAEditorDialog } from "./qa-editor-dialog";
@@ -169,18 +170,13 @@ export function QuestionList() {
               </article>
             ))}
             {filtered.length === 0 && (
-              <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border/60">
-                <Search className="size-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-                <p className="text-sm text-muted-foreground mb-3">
-                  No questions found matching your criteria.
-                </p>
-                <button
-                  onClick={handleAdd}
-                  className="text-xs font-semibold uppercase tracking-wider border border-border px-3 py-2 rounded-xl hover:bg-muted/60 transition-colors"
-                >
-                  Add the first question for this domain
-                </button>
-              </div>
+              <EmptyState
+                icon={Search}
+                title="No questions found"
+                description="Try adjusting your search or filters."
+                action={{ label: "Add the first question", onClick: handleAdd, icon: Plus }}
+                size="sm"
+              />
             )}
             <ListPagination
               page={page}

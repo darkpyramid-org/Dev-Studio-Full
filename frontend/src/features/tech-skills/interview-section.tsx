@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useForge } from "@/lib/store";
 import { QACard } from "@/features/interview/qa-card";
 import { QAEditorDialog } from "@/components/crud/interview";
@@ -151,14 +152,13 @@ export function InterviewSection({ data, subAreaId, triggerAdd }: Props) {
         ))}
 
         {filteredQs.length === 0 && (
-          <div className="text-center py-20 border border-dashed border-border rounded-xl bg-muted/20">
-            <p className="text-sm text-muted-foreground">
-              No questions found. Try adjusting your search or difficulty filter.
-            </p>
-            <button onClick={openAdd} className="mt-4 text-xs text-primary hover:underline">
-              Add the first question
-            </button>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="No questions found"
+            description="Try adjusting your search or difficulty filter."
+            action={{ label: "Add the first question", onClick: openAdd, icon: Plus }}
+            size="sm"
+          />
         )}
 
         <ListPagination

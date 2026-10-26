@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   ShieldCheck,
   CreditCard,
@@ -187,15 +188,12 @@ export function ServicesSection({ data, subArea }: Props) {
       </div>
 
       {services.length === 0 ? (
-        <div className="text-center py-24 border border-dashed border-border rounded-xl bg-muted/20">
-          <Layers className="size-8 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
-            No services defined for <span className="font-medium">{label}</span> yet.
-          </p>
-          <p className="text-xs text-muted-foreground/60 mt-1">
-            Select a specific technology from the sidebar to see its services.
-          </p>
-        </div>
+        <EmptyState
+          icon={Layers}
+          title={`No services for ${label} yet`}
+          description="Select a specific technology from the sidebar to see its services."
+          size="lg"
+        />
       ) : (
         <>
           {/* Category filter */}

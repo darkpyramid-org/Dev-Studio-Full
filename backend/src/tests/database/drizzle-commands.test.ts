@@ -1,23 +1,11 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { execa } from 'execa';
+import { describe, test, expect } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-
-// Mock execa for command testing
-vi.mock('execa');
 
 describe('Drizzle Command Tests', () => {
   const backendPath = process.cwd();
   const drizzleConfigPath = join(backendPath, 'drizzle.config.ts');
   const migrationPath = join(backendPath, 'src', 'infrastructure', 'database', 'drizzle');
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
 
   test('drizzle.config.ts has correct configuration', () => {
     expect(existsSync(drizzleConfigPath)).toBe(true);

@@ -7,7 +7,8 @@ import { Scissors, Plus, Trash2, Search, Copy } from "lucide-react";
 import { toast } from "sonner";
 import type { Snippet } from "@/types/tools";
 import { Field, Input, TextArea } from "./shared";
-import { SplitLayout } from "../../components/layout";
+import { SplitLayout, InnerSidebarEmpty } from "../../components/layout";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input as UIInput } from "@/components/ui/input";
 
@@ -112,9 +113,7 @@ export function Snippets({ selectedId }: { selectedId?: string }) {
           );
         })}
         {filtered.length === 0 && (
-          <li className="px-3 py-10 text-xs text-muted-foreground text-center border border-dashed border-border/60 rounded-xl m-1">
-            No snippets found.
-          </li>
+          <li><InnerSidebarEmpty message="No snippets found." /></li>
         )}
       </ul>
       <ListPagination
@@ -208,16 +207,13 @@ export function Snippets({ selectedId }: { selectedId?: string }) {
           </div>
         </section>
       ) : (
-        <section className="grid place-items-center p-8 text-center flex-1">
-          <div>
-            <Scissors className="size-10 text-muted-foreground/30 mx-auto mb-3" />
-            <button
-              onClick={create}
-              className="text-xs font-semibold uppercase tracking-wider border border-border px-3 py-2 rounded-xl hover:bg-muted/60 transition-colors"
-            >
-              Save your first snippet
-            </button>
-          </div>
+        <section className="grid place-items-center flex-1">
+          <EmptyState
+            icon={Scissors}
+            title="No snippets yet"
+            description="Save reusable code snippets for quick access."
+            action={{ label: "Save your first snippet", onClick: create, icon: Plus }}
+          />
         </section>
       )}
 

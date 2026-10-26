@@ -2,8 +2,9 @@ import { useRouter } from "@tanstack/react-router";
 import { RefreshCw, Home, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+export function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
+  const errorMessage = error instanceof Error ? error.message : undefined;
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -54,7 +55,7 @@ export function ErrorComponent({ error, reset }: { error: Error; reset: () => vo
         </div>
 
         {/* Error details */}
-        {error?.message && (
+        {errorMessage && (
           <div
             className={`mt-6 transition-all duration-1000 delay-300 ${
               mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -65,7 +66,7 @@ export function ErrorComponent({ error, reset }: { error: Error; reset: () => vo
                 Error details
               </summary>
               <div className="mt-2 text-xs text-muted-foreground bg-muted/60 rounded-xl px-3 py-2.5 font-mono border border-border/60 max-h-32 overflow-y-auto scrollbar-thin">
-                {error.message}
+                {errorMessage}
               </div>
             </details>
           </div>

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { SavedJob } from "@/types/jobs";
 import type { ScrapedJob } from "@/types/jobs";
@@ -117,22 +119,14 @@ export function JobBrowser({ onSaveJob, onSaveOffer }: Props) {
 
       <div className="flex-1 overflow-y-auto p-4">
         {!fetched && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <div className="size-14 rounded-2xl bg-primary/10 grid place-items-center">
-              <Search className="size-6 text-primary" />
-            </div>
-            <p className="text-sm font-semibold">Browse Jobs from Top Sites</p>
-            <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-              Search across <strong>Indeed</strong>, <strong>Wuzzuf</strong>, <strong>Bayt</strong>,{" "}
-              <strong>RemoteOK</strong>, <strong>Mostaql</strong>, and <strong>Khamsat</strong> at
-              once. Default: <em>Full Stack Developer</em> — last 24 hours.
-            </p>
-            <button
-              onClick={handleSearch}
-              className="mt-2 px-5 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
-            >
-              Load Jobs Now
-            </button>
+          <div className="flex items-center justify-center h-full">
+            <EmptyState
+              icon={Search}
+              title="Browse Jobs from Top Sites"
+              description="Search across Indeed, Wuzzuf, Bayt, RemoteOK, Mostaql, and Khamsat at once."
+              action={{ label: "Load Jobs Now", onClick: handleSearch }}
+              size="lg"
+            />
           </div>
         )}
 
@@ -144,12 +138,11 @@ export function JobBrowser({ onSaveJob, onSaveOffer }: Props) {
         )}
 
         {!loading && fetched && results.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-sm text-muted-foreground">No jobs found.</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Try different keywords, a wider time range, or more sources.
-            </p>
-          </div>
+          <EmptyState
+            title="No jobs found"
+            description="Try different keywords, a wider time range, or more sources."
+            size="sm"
+          />
         )}
 
         {!loading && results.length > 0 && (

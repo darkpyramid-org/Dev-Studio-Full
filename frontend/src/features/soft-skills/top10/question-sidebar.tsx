@@ -1,4 +1,5 @@
 import { Trophy, Plus, X, Search, Check, Trash2 } from "lucide-react";
+import { InnerSidebarEmpty } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { type Question, type InterviewQuestion } from "@/types/skills";
 import { AddQuestionForm } from "@/components/crud/soft-skills";
@@ -143,9 +144,7 @@ export function QuestionSidebar({
               );
             })}
             {filtered.length === 0 && (
-              <p className="text-[10px] text-center text-muted-foreground py-4 italic">
-                No questions match
-              </p>
+              <InnerSidebarEmpty message="No questions match." />
             )}
           </nav>
         </div>

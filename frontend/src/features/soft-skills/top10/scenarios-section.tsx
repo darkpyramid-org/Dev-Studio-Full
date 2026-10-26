@@ -1,4 +1,5 @@
 import { Layers, Plus, Sparkles, AlertCircle, Trash2, Star } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { type Scenario } from "@/types/skills";
 import { ScenarioForm } from "@/components/crud/soft-skills";
 import { ScenarioCard } from "./scenario-card";
@@ -138,21 +139,13 @@ export function ScenariosSection({
 
       {/* Empty state */}
       {scenarios.length === 0 && !showAddScenario && (
-        <div className="text-center py-12 border border-dashed border-border/60 rounded-2xl">
-          <div className="size-10 rounded-2xl bg-muted/60 grid place-items-center mx-auto mb-3">
-            <Star className="size-5 text-muted-foreground/40" />
-          </div>
-          <p className="text-sm font-medium text-muted-foreground">No scenarios yet</p>
-          <p className="text-xs text-muted-foreground/60 mt-1 mb-4">
-            Prepare real stories from your experience using the STAR format.
-          </p>
-          <button
-            onClick={onShowAdd}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
-          >
-            <Plus className="size-3" /> Add Your First Scenario
-          </button>
-        </div>
+        <EmptyState
+          icon={Star}
+          title="No scenarios yet"
+          description="Prepare real stories from your experience using the STAR format."
+          action={{ label: "Add Your First Scenario", onClick: onShowAdd, icon: Plus }}
+          size="sm"
+        />
       )}
     </div>
   );

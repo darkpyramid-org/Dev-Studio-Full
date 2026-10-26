@@ -10,3 +10,4 @@ export * from "./cv.js";
 export * from "./planner.js";
 export * from "./skills.js";
 export * from "./jobs.js";
+export * from "./enums.js";

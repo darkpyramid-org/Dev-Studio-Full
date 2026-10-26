@@ -1,61 +1,37 @@
 import { StateCreator } from "zustand";
 import { ForgeState } from "../types";
 import * as db from "@/lib/api";
-import { toast } from "sonner";
-import { Prompt } from "@/types/tools";
-
-type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+import { createCrudActions } from "../crud.factory";
 
 export const createPromptSlice: StateCreator<
   ForgeState,
   [["zustand/persist", unknown]],
   [],
   Partial<ForgeState>
-> = (set, get) => ({
-  upsertPrompt: async (p) => {
-    const previous = get().prompts;
-    set((s) => ({
-      prompts: s.prompts.some((x) => x.id === p.id)
-        ? s.prompts.map((x: any) => (x.id === p.id ? p : x))
-        : [p, ...s.prompts],
-    }));
-    try {
-      const saved = await db.upsertPrompt({
-        ...p,
-        usage_count: p.usageCount,
-        versions: p.versions,
-        user_id: "",
-      } as any);
-      if (saved?.id && saved.id !== p.id) {
-        set((s) => ({
-          prompts: s.prompts.map((x) => (x.id === p.id ? { ...x, id: saved.id as string } : x)),
-        }));
-      }
-      toast.success("Prompt saved!");
-    } catch (err: any) {
-      set({ prompts: previous });
-      toast.error(`Failed to save: ${err.message}`);
-    }
-  },
-  deletePrompt: async (id) => {
-    const previous = get().prompts;
-    set((s) => ({ prompts: s.prompts.filter((p) => p.id !== id) }));
+> = (set, get) => {
+  const { upsert, remove } = createCrudActions(set, get, {
+    label: "Prompt",
+    getList: (s) => s.prompts,
+    setList: (list) => ({ prompts: list }),
+    apiUpsert: db.upsertPrompt,
+    apiDelete: db.deletePrompt,
+    toPayload: ({ usageCount, ...prompt }) => ({
+      ...prompt,
+      usage_count: usageCount,
+      user_id: "",
+    }),
+  });
 
-    toast.promise(db.deletePrompt(id), {
-      loading: "Deleting prompt...",
-      success: "Prompt deleted!",
-      error: (err) => {
-        set({ prompts: previous });
-        return `Failed to delete: ${err.message}`;
-      },
-    });
-  },
-  toggleFavoritePrompt: async (id) => {
-    const p = get().prompts.find((x) => x.id === id);
-    if (p) await get().upsertPrompt({ ...p, favorite: !p.favorite });
-  },
-  incrementPromptUsage: async (id) => {
-    const p = get().prompts.find((x) => x.id === id);
-    if (p) await get().upsertPrompt({ ...p, usageCount: (p.usageCount || 0) + 1 });
-  },
-});
+  return {
+    upsertPrompt: upsert,
+    deletePrompt: remove,
+    toggleFavoritePrompt: async (id) => {
+      const p = get().prompts.find((x) => x.id === id);
+      if (p) await upsert({ ...p, favorite: !p.favorite });
+    },
+    incrementPromptUsage: async (id) => {
+      const p = get().prompts.find((x) => x.id === id);
+      if (p) await upsert({ ...p, usageCount: (p.usageCount || 0) + 1 });
+    },
+  };
+};

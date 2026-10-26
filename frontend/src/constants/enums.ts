@@ -1,12 +1,14 @@
 /**
  * Centralized Enums & Types Index
- * Re-exports all enums and types from their source locations
- * Organized by domain
+ *
+ * All values come from the backend (backend/src/domain/enums.ts) via the
+ * @shared/enums path alias. Nothing is defined here — just re-exported for
+ * convenience. At runtime, use the useEnums() hook to get live values from /api/enums.
  */
 
-// ── Skills Enums & Types ───────────────────────────────────────────────────────
-
 export {
+  CURRENCIES,
+  ACTIVITY_TYPES,
   TECH_AREA_IDS,
   TECH_AREA_LABELS,
   SOFT_AREA_ID,
@@ -19,51 +21,79 @@ export {
   SERVICE_CATEGORIES,
   TASK_PRIORITIES,
   TASK_STATUSES,
-} from "../data/skills";
+  SKILL_ITEM_PRIORITIES,
+  MATERIAL_TYPES,
+  TYPE_LABELS,
+  MATERIAL_AREA_IDS,
+  MATERIAL_AREA_LABELS,
+  MATERIAL_FILTERS,
+  TASK_CATEGORIES,
+  JOB_STATUSES,
+  JOB_PLATFORMS,
+  JOB_CATEGORIES,
+  OFFER_STATUSES,
+  OFFER_PLATFORMS,
+  OFFER_CATEGORIES,
+  SERVICE_STATUSES,
+  SERVICE_PLATFORMS,
+  FREELANCE_SERVICE_CATEGORIES,
+  CV_FOCUSES,
+  CV_LANGUAGE_LEVELS,
+  ATS_GRADES,
+  AGENT_STATUSES,
+  ASSET_KINDS,
+  CONNECTOR_TYPES,
+  SOCIAL_PLATFORMS,
+  MAIL_CHANNELS,
+  NOTIFICATION_TYPES,
+  ACTIVITY_ACTIONS,
+  ACTIVITY_ENTITY_TYPES,
+  getAllSoftSkillItems,
+  getSoftSkillItemById,
+  getSoftSkillCategory,
+  isTechArea,
+  isSoftSkillArea,
+  isMaterialArea,
+  isMaterialType,
+} from "@shared/enums";
 
 export type {
-  SoftSkillItem,
-  SoftSkillCategory,
+  Currency,
+  ActivityType,
+  TechAreaId,
+  SoftAreaId,
   QuestionDifficulty,
   QuestionArea,
   ServiceCategory,
   TaskPriority,
   TaskStatus,
-} from "../data/skills";
-
-// ── Materials Enums & Types ────────────────────────────────────────────────────
-
-export {
-  MATERIAL_TYPES,
-  TYPE_LABELS,
-  MATERIAL_AREA_IDS,
-  MATERIAL_AREA_LABELS,
-} from "../data/materials";
-
-export type {
+  SkillItemPriority,
+  SoftSkillItem,
+  SoftSkillCategory,
+  Material,
+  Area,
+  AreaGroup,
   MaterialType,
   MaterialAreaId,
-} from "../data/materials";
-
-// ── Career & Jobs Enums & Types (from backend shared enums) ────────────────────
-
-export type {
-  JobStatus,
-  OfferStatus,
-  ServiceStatus,
-  JobPlatform,
-  OfferPlatform,
-  ServicePlatform,
   TaskCategory,
+  JobStatus,
+  JobPlatform,
+  JobCategory,
+  OfferStatus,
+  OfferPlatform,
+  OfferCategory,
+  ServiceStatus,
+  ServicePlatform,
+  FreelanceServiceCategory,
   CVFocus,
   CVLanguageLevel,
   ATSGrade,
   AgentStatus,
   AssetKind,
-  NotificationType,
-  ActivityAction,
-  ActivityEntityType,
   ConnectorType,
   SocialPlatform,
   MailChannel,
+  NotificationType,
+  ActivityAction,
+  ActivityEntityType,
 } from "@shared/enums";

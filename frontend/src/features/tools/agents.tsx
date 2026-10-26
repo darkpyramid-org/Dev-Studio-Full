@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SplitLayout } from "../../components/layout";
+import { SplitLayout, InnerSidebarEmpty } from "../../components/layout";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { MODELS, PROVIDER_BADGE } from "./models";
@@ -207,9 +207,7 @@ export function Agents({ selectedId }: { selectedId?: string }) {
           );
         })}
         {filtered.length === 0 && (
-          <li className="px-3 py-10 text-xs text-muted-foreground text-center border border-dashed border-border/60 rounded-xl m-1">
-            No agents found.
-          </li>
+          <li><InnerSidebarEmpty message="No agents found." /></li>
         )}
       </ul>
       <ListPagination

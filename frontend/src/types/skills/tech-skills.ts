@@ -1,24 +1,13 @@
-import { ElementType } from "react";
+import type { ElementType } from "react";
+import type { TechAreaId, SoftAreaId, ServiceCategory } from "@shared/enums";
+
+export type { TechAreaId, SoftAreaId, ServiceCategory };
+export type AreaId = TechAreaId | SoftAreaId;
 
 /**
  * Tech Skills Type Definitions
  * Centralized types for all tech skill areas and related data structures
  */
-
-// ── Tech Skill Area IDs ────────────────────────────────────────────────────────
-
-export type TechAreaId =
-  | "frontend"
-  | "backend"
-  | "devops"
-  | "testing"
-  | "database"
-  | "design-patterns"
-  | "architecture"
-  | "system-design"
-  | "microservices"
-  | "security"
-  | "performance";
 
 // ── Shared Skill Concepts ──────────────────────────────────────────────────────
 
@@ -39,17 +28,6 @@ export interface SkillChecklistItem {
 }
 
 // ── Service Integration Types ──────────────────────────────────────────────────
-
-export type ServiceCategory =
-  | "auth"
-  | "payment"
-  | "email"
-  | "cache"
-  | "queue"
-  | "storage"
-  | "realtime"
-  | "monitoring"
-  | "search";
 
 export interface ServiceSnippet {
   lang: string;
@@ -84,7 +62,7 @@ export interface SkillSubArea {
 }
 
 export interface SkillAreaData {
-  id: TechAreaId;
+  id: AreaId;
   label: string;
   icon: ElementType;
   description: string;
@@ -121,7 +99,7 @@ export interface SkillProject {
 // ── Component Props Types ──────────────────────────────────────────────────────
 
 export interface SkillAreaProps {
-  areaId: TechAreaId;
+  areaId: AreaId;
 }
 
 export interface TasksSectionProps {
@@ -151,7 +129,7 @@ export interface InterviewSectionProps {
 }
 
 export interface SkillTabsProps {
-  areaId: TechAreaId;
+  areaId: AreaId;
 }
 
 // ── Internal Component Types ───────────────────────────────────────────────────
@@ -161,5 +139,5 @@ export type SectionId = "overview" | "interview" | "resources" | "services";
 export interface SubAreaTab {
   id: string;
   label: string;
-  icon?: React.ElementType;
+  icon?: ElementType;
 }

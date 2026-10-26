@@ -47,6 +47,7 @@ vi.mock("../../infrastructure/di/container.js", () => ({
 }));
 
 import authRoutes from "../../presentation/routes/auth.routes.js";
+import { signToken } from "../../presentation/controllers/auth.controller.js";
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
 
@@ -78,15 +79,16 @@ function buildApp() {
 describe("POST /api/auth/register — complete API flow", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 201 and user data on successful registration", async () => {
+  it("returns 200 and requireVerification payload on successful registration", async () => {
     mockAuthService.findUserByEmail.mockResolvedValue(null);
-    mockAuthService.registerUser.mockResolvedValue(VERIFIED_USER);
+    mockAuthService.registerUser.mockResolvedValue({ ...VERIFIED_USER, verificationToken: "123456" });
 
     const res = await request(buildApp())
       .post("/api/auth/register")
       .send({ email: "new@example.com", password: "Password1!" });
 
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ requireVerification: true });
     expect(mockAuthService.findUserByEmail).toHaveBeenCalledWith("new@example.com");
     expect(mockAuthService.registerUser).toHaveBeenCalled();
   });
@@ -176,7 +178,11 @@ describe("POST /api/auth/logout — complete API flow", () => {
   it("returns 200 and clears the auth cookie", async () => {
     const res = await request(buildApp()).post("/api/auth/logout");
     expect(res.status).toBe(200);
-    expect(mockAuthService.clearToken).toHaveBeenCalled();
+    expect(res.body).toMatchObject({ ok: true });
+    const setCookie = res.headers["set-cookie"] as string[] | string;
+    const cookieStr = Array.isArray(setCookie) ? setCookie.join(";") : (setCookie ?? "");
+    expect(cookieStr).toMatch(/ds_token=/);
+    expect(cookieStr).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/i);
   });
 });
 
@@ -194,9 +200,7 @@ describe("GET /api/auth/user — complete API flow", () => {
   });
 
   it("returns 200 with user data when valid token provided", async () => {
-    const token = "valid.jwt.token";
-    mockAuthService.getTokenFromRequest.mockReturnValue(token);
-    mockAuthService.verifyToken.mockReturnValue({ sub: VERIFIED_USER.id });
+    const token = signToken(VERIFIED_USER.id);
     mockAuthService.findUserById.mockResolvedValue(VERIFIED_USER);
 
     const res = await request(buildApp())
@@ -204,6 +208,7 @@ describe("GET /api/auth/user — complete API flow", () => {
       .set("Cookie", `ds_token=${token}`);
 
     expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: VERIFIED_USER.id, email: VERIFIED_USER.email });
   });
 });
 
@@ -213,7 +218,7 @@ describe("GET /api/auth/config — complete API flow", () => {
   it("returns 200 with auth configuration", async () => {
     const res = await request(buildApp()).get("/api/auth/config");
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("googleAuthEnabled");
+    expect(res.body).toHaveProperty("googleEnabled");
   });
 });
 

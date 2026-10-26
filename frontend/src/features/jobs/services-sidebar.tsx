@@ -3,7 +3,7 @@ import { useState } from "react";
 import { usePagination } from "@/hooks/use-pagination";
 import { ListPagination } from "@/components/ui/list-pagination";
 import type { MyService } from "@/types/jobs";
-import { SERVICE_STATUS_COLORS, PLATFORM_COLORS, SERVICE_STATUS_LABELS } from "@/constants";
+import { SERVICE_STATUS_COLORS, getStatusColor, SERVICE_STATUS_LABELS } from "@/constants";
 import {
   InnerSidebar,
   InnerSidebarHeader,
@@ -111,7 +111,7 @@ export function ServicesSidebar({ services, activeId, onSelect, onAdd }: Props) 
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   {svc.platform && (
                     <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded-lg font-medium ${PLATFORM_COLORS[svc.platform] ?? "bg-muted text-muted-foreground"}`}
+                      className={`text-[9px] px-1.5 py-0.5 rounded-lg font-medium ${getStatusColor(svc.platform, "platform") || "bg-muted text-muted-foreground"}`}
                     >
                       {svc.platform}
                     </span>

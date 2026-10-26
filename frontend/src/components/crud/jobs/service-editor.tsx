@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Trash2, ExternalLink, Star } from "lucide-react";
 import type { MyService, ServiceStatus } from "@/types/jobs";
 import { SERVICE_STATUSES, SERVICE_PLATFORMS } from "@/types/jobs";
-import { FREELANCE_SERVICE_CATEGORIES, SERVICE_STATUS_LABELS } from "@/constants";
+import { FREELANCE_SERVICE_CATEGORIES, SERVICE_STATUS_LABELS, CURRENCIES } from "@/constants";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +29,6 @@ const EMPTY: Partial<MyService> = {
   notes: "",
 };
 
-const CURRENCIES = ["USD", "EUR", "SAR", "EGP", "AED", "GBP"];
 
 export function ServiceEditor({ service, isNew, onSave, onDelete }: Props) {
   const [form, setForm] = useState<Partial<MyService>>(EMPTY);

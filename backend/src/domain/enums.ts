@@ -21,6 +21,11 @@ export {
   TASK_PRIORITIES,
   TASK_STATUSES,
   SKILL_ITEM_PRIORITIES,
+  getAllSoftSkillItems,
+  getSoftSkillItemById,
+  getSoftSkillCategory,
+  isTechArea,
+  isSoftSkillArea,
 } from "./constants/skills.js";
 
 export type {
@@ -32,6 +37,8 @@ export type {
   TaskPriority,
   TaskStatus,
   SkillItemPriority,
+  SoftSkillItem,
+  SoftSkillCategory,
 } from "./constants/skills.js";
 
 // --- Import from centralized materials constants ---
@@ -42,11 +49,16 @@ export {
   MATERIAL_AREA_IDS,
   MATERIAL_AREA_LABELS,
   MATERIAL_FILTERS,
+  isMaterialArea,
+  isMaterialType,
 } from "./constants/materials.js";
 
 export type {
   MaterialType,
   MaterialAreaId,
+  Material,
+  Area,
+  AreaGroup,
 } from "./constants/materials.js";
 
 // --- Planner Enums ---
@@ -211,6 +223,16 @@ export const ACTIVITY_ENTITY_TYPES = [
 ] as const;
 export type ActivityEntityType = (typeof ACTIVITY_ENTITY_TYPES)[number];
 
+// --- Currencies ---
+
+export const CURRENCIES = ["USD", "EUR", "SAR", "EGP", "AED", "GBP"] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+// --- Activity Types ---
+
+export const ACTIVITY_TYPES = ["prayer", "sports", "care", "food"] as const;
+export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+
 // --- Integrations Enums ---
 
 export const CONNECTOR_TYPES = ["companies", "hr", "clients"] as const;
@@ -221,3 +243,49 @@ export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 
 export const MAIL_CHANNELS = ["cover-letter", "gmail", "whatsapp"] as const;
 export type MailChannel = (typeof MAIL_CHANNELS)[number];
+
+// --- Job Category Enums (UI dropdowns) ---
+
+export const JOB_CATEGORIES = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Freelance",
+  "Internship",
+  "Remote",
+] as const;
+export type JobCategory = (typeof JOB_CATEGORIES)[number];
+
+export const OFFER_CATEGORIES = [
+  "Web Development",
+  "Mobile Development",
+  "UI/UX Design",
+  "Graphic Design",
+  "WordPress / CMS",
+  "E-commerce",
+  "Backend / API",
+  "Full Stack",
+  "Data & Analytics",
+  "Content Writing",
+  "SEO / Marketing",
+  "DevOps",
+  "Consulting",
+  "Other",
+] as const;
+export type OfferCategory = (typeof OFFER_CATEGORIES)[number];
+
+export const FREELANCE_SERVICE_CATEGORIES = [
+  "Web Development",
+  "Mobile Development",
+  "UI/UX Design",
+  "Graphic Design",
+  "Copywriting",
+  "SEO",
+  "Digital Marketing",
+  "Video Editing",
+  "Data Entry",
+  "Translation",
+  "Consulting",
+  "Other",
+] as const;
+export type FreelanceServiceCategory = (typeof FREELANCE_SERVICE_CATEGORIES)[number];

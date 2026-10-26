@@ -5,6 +5,9 @@ import type {
   JobPlatform,
   OfferPlatform,
   ServicePlatform,
+  JobCategory,
+  OfferCategory,
+  FreelanceServiceCategory,
 } from "@shared/enums";
 
 import {
@@ -14,6 +17,9 @@ import {
   JOB_PLATFORMS,
   OFFER_PLATFORMS,
   SERVICE_PLATFORMS,
+  JOB_CATEGORIES,
+  OFFER_CATEGORIES,
+  FREELANCE_SERVICE_CATEGORIES,
 } from "@shared/enums";
 
 export type {
@@ -23,6 +29,9 @@ export type {
   JobPlatform,
   OfferPlatform,
   ServicePlatform,
+  JobCategory,
+  OfferCategory,
+  FreelanceServiceCategory,
 };
 
 export {
@@ -32,48 +41,10 @@ export {
   JOB_PLATFORMS,
   OFFER_PLATFORMS,
   SERVICE_PLATFORMS,
+  JOB_CATEGORIES,
+  OFFER_CATEGORIES,
+  FREELANCE_SERVICE_CATEGORIES,
 };
-
-export const JOB_CATEGORIES = [
-  "Full-time",
-  "Part-time",
-  "Contract",
-  "Freelance",
-  "Internship",
-  "Remote",
-] as const;
-
-export const OFFER_CATEGORIES = [
-  "Web Development",
-  "Mobile Development",
-  "UI/UX Design",
-  "Graphic Design",
-  "WordPress / CMS",
-  "E-commerce",
-  "Backend / API",
-  "Full Stack",
-  "Data & Analytics",
-  "Content Writing",
-  "SEO / Marketing",
-  "DevOps",
-  "Consulting",
-  "Other",
-] as const;
-
-export const FREELANCE_SERVICE_CATEGORIES = [
-  "Web Development",
-  "Mobile Development",
-  "UI/UX Design",
-  "Graphic Design",
-  "Copywriting",
-  "SEO",
-  "Digital Marketing",
-  "Video Editing",
-  "Data Entry",
-  "Translation",
-  "Consulting",
-  "Other",
-];
 
 export interface SavedJob {
   id: string;

@@ -1,12 +1,7 @@
 /**
- * Centralized Skills Constants
- * Shared across frontend and backend for consistency
- * 
- * This file contains all skill-related constants including:
- * - Skill area IDs and labels
- * - Soft skill groups and categories
- * - Interview configuration
- * - Color schemes and styling
+ * Skills UI Constants
+ * Pure enum values come from the backend via @shared/enums.
+ * This file only adds frontend-specific UI data (icons, colors, labels).
  */
 
 import {
@@ -22,43 +17,39 @@ import {
 } from "lucide-react";
 import type { ElementType } from "react";
 
-// ── Tech Skill Area IDs ────────────────────────────────────────────────────────
+// ── Re-export pure enum values from the single backend source of truth ─────────
 
-export const TECH_AREA_IDS = [
-  "frontend",
-  "backend",
-  "devops",
-  "testing",
-  "database",
-  "design-patterns",
-  "architecture",
-  "system-design",
-  "microservices",
-  "security",
-  "performance",
-] as const;
+export {
+  TECH_AREA_IDS,
+  TECH_AREA_LABELS,
+  SOFT_AREA_ID,
+  SOFT_SKILL_AREA_LABEL,
+  QUESTION_DIFFICULTIES,
+  QUESTION_AREAS,
+  DEPTH_LABEL_PRESETS,
+  SERVICE_CATEGORIES,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  SKILL_ITEM_PRIORITIES,
+  getAllSoftSkillItems,
+  getSoftSkillItemById,
+  getSoftSkillCategory,
+  isTechArea,
+  isSoftSkillArea,
+} from "@shared/enums";
 
-export const TECH_AREA_LABELS: Record<string, string> = {
-  frontend: "Frontend",
-  backend: "Backend",
-  devops: "DevOps",
-  testing: "Testing",
-  database: "Database",
-  "design-patterns": "Design Patterns",
-  architecture: "Architecture",
-  "system-design": "System Design",
-  microservices: "Microservices",
-  security: "Security",
-  performance: "Performance",
-};
+export type {
+  TechAreaId,
+  SoftAreaId,
+  QuestionDifficulty,
+  QuestionArea,
+  ServiceCategory,
+  TaskPriority,
+  TaskStatus,
+  SkillItemPriority,
+} from "@shared/enums";
 
-// ── Soft Skill Area IDs ────────────────────────────────────────────────────────
-
-export const SOFT_AREA_ID = "softskills" as const;
-
-export const SOFT_SKILL_AREA_LABEL = "Soft Skills";
-
-// ── Soft Skill Groups & Categories ────────────────────────────────────────────
+// ── Soft Skill item type with optional React icon ──────────────────────────────
 
 export interface SoftSkillItem {
   id: string;
@@ -70,7 +61,10 @@ export interface SoftSkillCategory {
   [category: string]: SoftSkillItem[];
 }
 
-export const SOFT_SKILL_GROUPS: Record<string, { id: string; label: string; icon?: ElementType }[]> = {
+// ── UI mirror of backend SOFT_SKILL_GROUPS; IDs and labels must stay in sync.
+// This layer adds React icons, which cannot live in the backend's shared constants.
+
+export const SOFT_SKILL_GROUPS: Record<string, SoftSkillItem[]> = {
   leadership: [
     { id: "time", label: "Time Management", icon: Clock },
     { id: "growth", label: "Growth Mindset", icon: Sparkles },
@@ -85,7 +79,7 @@ export const SOFT_SKILL_GROUPS: Record<string, { id: string; label: string; icon
   ],
 };
 
-// ── Special Sub-Areas ──────────────────────────────────────────────────────────
+// ── Special sub-areas — same IDs as backend, adds UI styling ──────────────────
 
 export const SPECIAL_SUB_AREAS = {
   TOP_10: {
@@ -98,34 +92,7 @@ export const SPECIAL_SUB_AREAS = {
   },
 } as const;
 
-// ── Interview Configuration ────────────────────────────────────────────────────
-
-export const QUESTION_DIFFICULTIES = ["junior", "mid", "senior"] as const;
-export type QuestionDifficulty = (typeof QUESTION_DIFFICULTIES)[number];
-
-export const QUESTION_AREAS = [
-  "frontend",
-  "backend",
-  "devops",
-  "testing",
-  "database",
-  "softskills",
-  "general",
-] as const;
-export type QuestionArea = (typeof QUESTION_AREAS)[number];
-
-export const DEPTH_LABEL_PRESETS = [
-  "Deep dive",
-  "Code example",
-  "Real-world scenario",
-  "Common mistake / Gotcha",
-  "Follow-up question",
-  "Step-by-step",
-  "Senior perspective",
-  "Custom…",
-] as const;
-
-// ── Domain Configuration ───────────────────────────────────────────────────────
+// ── Domain config (UI-only, not in backend) ────────────────────────────────────
 
 export interface DomainConfig {
   id: string;
@@ -142,67 +109,8 @@ export const DOMAINS: DomainConfig[] = [
   { id: "core", label: "Core CS", icon: Terminal },
 ];
 
-// ── Service Categories ─────────────────────────────────────────────────────────
+// ── Utility ────────────────────────────────────────────────────────────────────
 
-export const SERVICE_CATEGORIES = [
-  "auth",
-  "payment",
-  "email",
-  "cache",
-  "queue",
-  "storage",
-  "realtime",
-  "monitoring",
-  "search",
-] as const;
-export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
-
-// ── Task & Project Configuration ───────────────────────────────────────────────
-
-export const TASK_PRIORITIES = ["low", "medium", "high"] as const;
-export type TaskPriority = (typeof TASK_PRIORITIES)[number];
-
-export const TASK_STATUSES = ["todo", "in-progress", "done"] as const;
-export type TaskStatus = (typeof TASK_STATUSES)[number];
-
-// ── Utility Functions ──────────────────────────────────────────────────────────
-
-/**
- * Get all soft skill items flattened
- */
-export function getAllSoftSkillItems(): SoftSkillItem[] {
+export function getAllSoftSkillItemsWithIcons(): SoftSkillItem[] {
   return Object.values(SOFT_SKILL_GROUPS).flat();
-}
-
-/**
- * Get soft skill item by ID
- */
-export function getSoftSkillItemById(id: string): SoftSkillItem | undefined {
-  return getAllSoftSkillItems().find((item) => item.id === id);
-}
-
-/**
- * Get soft skill category for an item ID
- */
-export function getSoftSkillCategory(itemId: string): string | undefined {
-  for (const [category, items] of Object.entries(SOFT_SKILL_GROUPS)) {
-    if (items.some((item) => item.id === itemId)) {
-      return category;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Check if an area ID is a tech area
- */
-export function isTechArea(areaId: string): boolean {
-  return TECH_AREA_IDS.includes(areaId as any);
-}
-
-/**
- * Check if an area ID is a soft skill area
- */
-export function isSoftSkillArea(areaId: string): boolean {
-  return areaId === SOFT_AREA_ID;
 }

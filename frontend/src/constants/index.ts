@@ -111,9 +111,19 @@ export {
 
 export type { ActivityTab } from "./ui";
 
+// ── Enums (value exports) ─────────────────────────────────────────────────────
+
+export {
+  CURRENCIES,
+  ACTIVITY_TYPES,
+} from "./enums";
+
 // ── Enums & Types ──────────────────────────────────────────────────────────────
 
 export type {
+  // Currencies & Activities
+  Currency,
+  ActivityType,
   // Skills
   SoftSkillItem,
   SoftSkillCategory,

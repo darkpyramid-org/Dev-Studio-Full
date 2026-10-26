@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Trash2, ExternalLink, Handshake } from "lucide-react";
 import type { FreelanceOffer, OfferStatus } from "@/types/jobs";
 import { OFFER_STATUSES, OFFER_PLATFORMS, OFFER_CATEGORIES } from "@/types/jobs";
-import { OFFER_STATUS_LABELS } from "@/constants";
+import { OFFER_STATUS_LABELS, CURRENCIES } from "@/constants";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +30,6 @@ const EMPTY: Partial<FreelanceOffer> = {
   notes: "",
 };
 
-const CURRENCIES = ["USD", "EUR", "SAR", "EGP", "AED", "GBP"];
 
 export function OfferEditor({ offer, isNew, onSave, onDelete }: Props) {
   const [form, setForm] = useState<Partial<FreelanceOffer>>(EMPTY);

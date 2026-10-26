@@ -3,6 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, GripVertical } from "lucide-react
 import type { CVExperience } from "@/types/cv";
 import { Input } from "@/features/tools/shared";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CVExperienceProps {
   data: CVExperience[];
@@ -128,16 +129,11 @@ export function CVExperienceSection({ data, onChange }: CVExperienceProps) {
                       className="flex-1"
                     />
                     <label className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap cursor-pointer">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={exp.current}
-                        onChange={(e) =>
-                          update(exp.id, {
-                            current: e.target.checked,
-                            end: e.target.checked ? "Present" : "",
-                          })
+                        onCheckedChange={(checked) =>
+                          update(exp.id, { current: !!checked })
                         }
-                        className="rounded"
                       />
                       Current
                     </label>

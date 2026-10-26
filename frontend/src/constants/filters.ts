@@ -1,80 +1,70 @@
 /**
  * Centralized Filter Constants
- * All filter configurations and filter-related data
- * Organized by feature domain
+ * All filter configurations and filter-related data, derived from @shared/enums.
+ * Organized by feature domain — no raw values defined here.
  */
+
+import {
+  MATERIAL_TYPES,
+  MATERIAL_AREA_IDS,
+  JOB_STATUSES,
+  OFFER_STATUSES,
+  SERVICE_STATUSES,
+  JOB_PLATFORMS,
+  OFFER_PLATFORMS,
+  SERVICE_PLATFORMS,
+  CV_FOCUSES,
+  QUESTION_DIFFICULTIES,
+  QUESTION_AREAS,
+  SOCIAL_PLATFORMS,
+  MAIL_CHANNELS,
+  CONNECTOR_TYPES,
+  ACTIVITY_TYPES,
+  TECH_AREA_IDS,
+} from "@shared/enums";
 
 // ── Material Filters ───────────────────────────────────────────────────────────
 
 export const MATERIAL_FILTERS = {
-  type: ["book", "course", "docs", "tool"],
-  area: [
-    "frontend",
-    "backend",
-    "devops",
-    "testing",
-    "database",
-    "architecture",
-    "design-systems",
-    "solid",
-    "clean-code",
-    "performance",
-    "security",
-    "algorithms",
-  ],
+  type: MATERIAL_TYPES,
+  area: MATERIAL_AREA_IDS,
 } as const;
 
 // ── Job Status Filters ─────────────────────────────────────────────────────────
 
-export const JOB_STATUS_FILTERS = ["saved", "applied", "interview", "offer", "rejected"] as const;
+export const JOB_STATUS_FILTERS = JOB_STATUSES;
 
 // ── Offer Status Filters ──────────────────────────────────────────────────────
 
-export const OFFER_STATUS_FILTERS = ["new", "in_review", "accepted", "rejected", "completed"] as const;
+export const OFFER_STATUS_FILTERS = OFFER_STATUSES;
 
 // ── Service Status Filters ────────────────────────────────────────────────────
 
-export const SERVICE_STATUS_FILTERS = ["active", "paused", "draft"] as const;
+export const SERVICE_STATUS_FILTERS = SERVICE_STATUSES;
 
-// ── Platform Filters ──────────────────────────────────────────────────────────
+// ── Platform Filters (all platforms combined for generic filter UIs) ───────────
+
+const _allPlatforms = [
+  ...JOB_PLATFORMS,
+  ...OFFER_PLATFORMS,
+  ...SERVICE_PLATFORMS,
+] as const;
 
 export const PLATFORM_FILTERS = [
-  "Fiverr",
-  "Mostaql",
-  "Khamsat",
-  "Upwork",
-  "Freelancer",
-  "LinkedIn",
-  "Indeed",
-  "RemoteOK",
-  "Wuzzuf",
-  "Bayt",
-  "Toptal",
-  "PeoplePerHour",
-  "Glassdoor",
-  "AngelList",
-  "We Work Remotely",
-  "Other",
+  ...new Set(_allPlatforms),
 ] as const;
 
 // ── CV Focus Filters ──────────────────────────────────────────────────────────
 
-export const CV_FOCUS_FILTERS = ["frontend", "backend", "fullstack", "general"] as const;
+export const CV_FOCUS_FILTERS = CV_FOCUSES;
 
 // ── Interview Difficulty Filters ──────────────────────────────────────────────
 
-export const DIFFICULTY_FILTERS = ["junior", "mid", "senior"] as const;
+export const DIFFICULTY_FILTERS = QUESTION_DIFFICULTIES;
 
 // ── Interview Domain Filters ──────────────────────────────────────────────────
 
-export const DOMAIN_FILTERS = [
-  "frontend",
-  "backend",
-  "database",
-  "devops",
-  "architecture",
-  "core",
-] as const;
+export const DOMAIN_FILTERS = QUESTION_AREAS;
 
 // ── Soft Skill Category Filters ────────────────────────────────────────────────
 
@@ -87,29 +77,23 @@ export const SOFT_SKILL_CATEGORY_FILTERS = [
 
 // ── Tech Skill Area Filters ────────────────────────────────────────────────────
 
-export const TECH_SKILL_AREA_FILTERS = [
-  "frontend",
-  "backend",
-  "devops",
-  "testing",
-  "database",
-] as const;
+export const TECH_SKILL_AREA_FILTERS = TECH_AREA_IDS;
 
 // ── Activity Type Filters ──────────────────────────────────────────────────────
 
-export const ACTIVITY_TYPE_FILTERS = ["prayer", "sports", "care", "food"] as const;
+export const ACTIVITY_TYPE_FILTERS = ACTIVITY_TYPES;
 
 // ── Social Platform Filters ───────────────────────────────────────────────────
 
-export const SOCIAL_PLATFORM_FILTERS = ["linkedin", "twitter", "instagram"] as const;
+export const SOCIAL_PLATFORM_FILTERS = SOCIAL_PLATFORMS;
 
 // ── Mail Channel Filters ──────────────────────────────────────────────────────
 
-export const MAIL_CHANNEL_FILTERS = ["cover-letter", "gmail", "whatsapp"] as const;
+export const MAIL_CHANNEL_FILTERS = MAIL_CHANNELS;
 
 // ── Connector Type Filters ────────────────────────────────────────────────────
 
-export const CONNECTOR_TYPE_FILTERS = ["companies", "hr", "clients"] as const;
+export const CONNECTOR_TYPE_FILTERS = CONNECTOR_TYPES;
 
 // ── Sidebar List Filter Options ────────────────────────────────────────────────
 
@@ -157,7 +141,7 @@ export function getFilterOptions(
     | "mail-channel"
     | "connector-type"
 ): readonly string[] {
-  const filters = {
+  const filters: Record<string, readonly string[]> = {
     "material-type": MATERIAL_FILTERS.type,
     "material-area": MATERIAL_FILTERS.area,
     "job-status": JOB_STATUS_FILTERS,
@@ -175,5 +159,5 @@ export function getFilterOptions(
     "connector-type": CONNECTOR_TYPE_FILTERS,
   };
 
-  return filters[filterType] || [];
+  return filters[filterType] ?? [];
 }

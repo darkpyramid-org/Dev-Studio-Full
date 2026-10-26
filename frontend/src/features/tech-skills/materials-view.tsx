@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, BookOpen, ExternalLink, type LucideIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SplitLayout } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import {
@@ -178,9 +179,13 @@ export function MaterialsView() {
                 </a>
               ))}
               {items.length === 0 && (
-                <div className="col-span-full text-center py-16 text-sm text-muted-foreground italic">
-                  No {filter === "all" ? "" : filter + " "}resources found
-                  {search ? ` for "${search}"` : ""}.
+                <div className="col-span-full">
+                  <EmptyState
+                    icon={BookOpen}
+                    title="No resources found"
+                    description={search ? `No results for "${search}"` : "Try a different filter."}
+                    size="sm"
+                  />
                 </div>
               )}
             </div>

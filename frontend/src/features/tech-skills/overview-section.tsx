@@ -1,5 +1,7 @@
 import type { SkillAreaData } from "@/types/skills";
 import { TabNav } from "@/components/layout";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BookOpen } from "lucide-react";
 
 interface Props {
   data: SkillAreaData;
@@ -34,10 +36,13 @@ export function OverviewSection({ data, subArea, onSubAreaChange, hideSubAreaNav
           </div>
         ))}
         {concepts.length === 0 && (
-          <div className="col-span-2 text-center py-20 border border-dashed border-border rounded-xl">
-            <p className="text-sm text-muted-foreground">
-              Select a topic from the sidebar to view key concepts.
-            </p>
+          <div className="col-span-2">
+            <EmptyState
+              icon={BookOpen}
+              title="Select a topic"
+              description="Choose a topic from the sidebar to view key concepts."
+              size="sm"
+            />
           </div>
         )}
       </div>

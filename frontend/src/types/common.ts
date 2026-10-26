@@ -1,8 +1,6 @@
-import type { QuestionDifficulty as Difficulty, QuestionArea as FocusArea } from "@shared/enums";
+import type { QuestionDifficulty as Difficulty, QuestionArea as FocusArea, AssetKind } from "@shared/enums";
 
-export type { Difficulty, FocusArea };
-
-export type AssetKind = "prompt" | "agent" | "component" | "template" | "snippet";
+export type { Difficulty, FocusArea, AssetKind };
 
 export interface AnswerDepth {
   id: string;

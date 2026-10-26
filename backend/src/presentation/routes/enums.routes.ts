@@ -1,0 +1,120 @@
+import { Router } from "express";
+import {
+  TASK_CATEGORIES,
+  JOB_STATUSES,
+  OFFER_STATUSES,
+  SERVICE_STATUSES,
+  JOB_PLATFORMS,
+  OFFER_PLATFORMS,
+  SERVICE_PLATFORMS,
+  JOB_CATEGORIES,
+  OFFER_CATEGORIES,
+  FREELANCE_SERVICE_CATEGORIES,
+  CV_FOCUSES,
+  CV_LANGUAGE_LEVELS,
+  ATS_GRADES,
+  AGENT_STATUSES,
+  ASSET_KINDS,
+  NOTIFICATION_TYPES,
+  ACTIVITY_ACTIONS,
+  ACTIVITY_ENTITY_TYPES,
+  ACTIVITY_TYPES,
+  CURRENCIES,
+  CONNECTOR_TYPES,
+  SOCIAL_PLATFORMS,
+  MAIL_CHANNELS,
+} from "../../domain/enums.js";
+import {
+  TECH_AREA_IDS,
+  TECH_AREA_LABELS,
+  SOFT_AREA_ID,
+  SOFT_SKILL_AREA_LABEL,
+  SOFT_SKILL_GROUPS,
+  SPECIAL_SUB_AREAS,
+  QUESTION_DIFFICULTIES,
+  QUESTION_AREAS,
+  DEPTH_LABEL_PRESETS,
+  SERVICE_CATEGORIES,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  SKILL_ITEM_PRIORITIES,
+} from "../../domain/constants/skills.js";
+import {
+  MATERIAL_TYPES,
+  TYPE_LABELS,
+  MATERIAL_AREA_IDS,
+  MATERIAL_AREA_LABELS,
+  MATERIAL_FILTERS,
+} from "../../domain/constants/materials.js";
+
+const router = Router();
+
+router.get("/", (_req, res) => {
+  res.json({
+    skills: {
+      TECH_AREA_IDS,
+      TECH_AREA_LABELS,
+      SOFT_AREA_ID,
+      SOFT_SKILL_AREA_LABEL,
+      SOFT_SKILL_GROUPS,
+      SPECIAL_SUB_AREAS,
+      QUESTION_DIFFICULTIES,
+      QUESTION_AREAS,
+      DEPTH_LABEL_PRESETS,
+      SERVICE_CATEGORIES,
+      TASK_PRIORITIES,
+      TASK_STATUSES,
+      SKILL_ITEM_PRIORITIES,
+    },
+    materials: {
+      MATERIAL_TYPES,
+      TYPE_LABELS,
+      MATERIAL_AREA_IDS,
+      MATERIAL_AREA_LABELS,
+      MATERIAL_FILTERS,
+    },
+    planner: {
+      TASK_CATEGORIES,
+    },
+    jobs: {
+      JOB_STATUSES,
+      JOB_PLATFORMS,
+      JOB_CATEGORIES,
+    },
+    offers: {
+      OFFER_STATUSES,
+      OFFER_PLATFORMS,
+      OFFER_CATEGORIES,
+    },
+    services: {
+      SERVICE_STATUSES,
+      SERVICE_PLATFORMS,
+      FREELANCE_SERVICE_CATEGORIES,
+    },
+    cv: {
+      CV_FOCUSES,
+      CV_LANGUAGE_LEVELS,
+      ATS_GRADES,
+    },
+    core: {
+      AGENT_STATUSES,
+      ASSET_KINDS,
+    },
+    integrations: {
+      CONNECTOR_TYPES,
+      SOCIAL_PLATFORMS,
+      MAIL_CHANNELS,
+    },
+    notifications: {
+      NOTIFICATION_TYPES,
+    },
+    activity: {
+      ACTIVITY_ACTIONS,
+      ACTIVITY_ENTITY_TYPES,
+      ACTIVITY_TYPES,
+    },
+    currencies: CURRENCIES,
+  });
+});
+
+export default router;

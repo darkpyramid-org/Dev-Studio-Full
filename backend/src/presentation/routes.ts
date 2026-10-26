@@ -19,6 +19,7 @@ import plannerRoutes from "./routes/planner.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
 import presenceRoutes from "./routes/presence.routes.js";
 import toolsRoutes from "./routes/tools.routes.js";
+import enumsRoutes from "./routes/enums.routes.js";
 
 export function registerRoutes(app: Express) {
   // --- Auth ---
@@ -44,6 +45,7 @@ export function registerRoutes(app: Express) {
   app.use("/api/skills", skillsRoutes);
   app.use("/api/presence", presenceRoutes);
   app.use("/api/tools", toolsRoutes);
+  app.use("/api/enums", enumsRoutes);
 
   // --- Legacy Backward Compatibility ---
 

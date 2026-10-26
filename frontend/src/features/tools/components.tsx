@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SplitLayout } from "../../components/layout";
+import { SplitLayout, InnerSidebarEmpty } from "../../components/layout";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input as UIInput } from "@/components/ui/input";
 
@@ -130,9 +130,7 @@ export function Components({ selectedId }: { selectedId?: string }) {
           );
         })}
         {filtered.length === 0 && (
-          <li className="px-3 py-10 text-xs text-muted-foreground text-center border border-dashed border-border/60 rounded-xl m-1">
-            No components found.
-          </li>
+          <li><InnerSidebarEmpty message="No components found." /></li>
         )}
       </ul>
       <ListPagination

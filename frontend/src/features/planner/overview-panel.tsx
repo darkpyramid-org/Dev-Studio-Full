@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, Clock, TrendingUp, Flame, Target } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import type { PlannerTask } from "@/types/planner";
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICON_COMPONENTS } from "@/data/planner/planner";
@@ -229,13 +230,12 @@ export function OverviewPanel({ tasks, weekStart }: OverviewPanelProps) {
         )}
 
         {totalTasks === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <TrendingUp className="size-10 mx-auto mb-3 opacity-20" />
-            <p className="text-sm font-medium">No tasks this week yet</p>
-            <p className="text-xs mt-1 opacity-60">
-              Add tasks from the Schedule tab to track your progress here
-            </p>
-          </div>
+          <EmptyState
+            icon={TrendingUp}
+            title="No tasks this week yet"
+            description="Add tasks from the Schedule tab to track your progress here."
+            size="sm"
+          />
         )}
       </div>
     </div>

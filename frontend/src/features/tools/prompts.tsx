@@ -7,7 +7,7 @@ import { Sparkles, Star, Copy, Plus, Trash2, History, Search, Brain, Zap } from 
 import { toast } from "sonner";
 import type { Prompt } from "@/types/tools";
 import { Field, Input, TextArea } from "./shared";
-import { SplitLayout } from "../../components/layout";
+import { SplitLayout, InnerSidebarEmpty } from "../../components/layout";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
@@ -187,9 +187,7 @@ export function Prompts({ selectedId }: { selectedId?: string }) {
           );
         })}
         {filtered.length === 0 && (
-          <li className="px-3 py-10 text-xs text-muted-foreground text-center border border-dashed border-border/60 rounded-xl m-1">
-            No prompts found.
-          </li>
+          <li><InnerSidebarEmpty message="No prompts found." /></li>
         )}
       </ul>
       <ListPagination
