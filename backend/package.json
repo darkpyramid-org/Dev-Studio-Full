@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc --project tsconfig.build.json && node scripts/copy-assets.js",

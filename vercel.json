@@ -6,7 +6,7 @@
       "framework": "express",
       "installCommand": "npm ci --include=dev",
       "buildCommand": "npm run build",
-      "entrypoint": "src/index.ts"
+      "entrypoint": "dist/index.js"
     },
     "frontend": {
       "root": "frontend",
