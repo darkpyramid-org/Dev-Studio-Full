@@ -1,30 +1,43 @@
 # 📖 Dev Studio Documentation Index
 
-> Welcome to the developer documentation for **Dev Studio**. Here you will find comprehensive guides on the architecture, setup, integrations, data schemas, and contributing workflows of the codebase.
+> Welcome to the comprehensive documentation index for **Dev Studio**. Here you will find deep technical guides covering architecture, database models, environment configuration, routes, testing, and contribution workflows.
 
 ---
 
-## 🛠️ Get Started & Setup
+## 🛠️ Getting Started & Setup
 
-- ⚙️ [Setup & Commands](./setup/README.md) — Detailed workspace setup, monorepo scripts, and folder structure.
-- 🌐 [Environment Variables](./setup/ENVIRONMENT.md) — Reference for configuration settings and private keys.
-- 🔑 [API Credentials Setup](./setup/CREDENTIALS_SETUP.md) — Configuring local authentication, Google OAuth 2.0, and Slack.
+- ⚙️ **[Setup & Workspace Commands](./setup/README.md)** — Monorepo setup, local commands, and Docker Compose instructions.
+- 🌐 **[Environment Variables Reference](./setup/ENVIRONMENT.md)** — Detailed specification for frontend and backend variables.
+- 🔑 **[API Credentials & Integrations Setup](./setup/CREDENTIALS_SETUP.md)** — Configuring local auth, Google OAuth 2.0, and Slack.
 
 ---
 
 ## 📐 Architecture & System Design
 
-- 📐 [Architecture Overview](./architecture/README.md) — System component diagram, Clean Architecture layers, authentication pipelines, and data flows.
-- 💾 [Data Models & Schema](./architecture/DATA_MODELS.md) — Drizzle ORM pgTable structures, modular schemas, and indexes.
+- 📐 **[Architecture Overview](./architecture/README.md)** — Clean Architecture layers, request pipelines, and dependency flow diagram.
+- 💾 **[Database Models & Drizzle Schema](./architecture/DATA_MODELS.md)** — Relational tables, indexes, and schema definitions.
+- 🔀 **[Frontend Routes Inventory & Verification](./architecture/ROUTES_VERIFICATION.md)** — File-based route hierarchy, categories, and layout map.
 
 ---
 
 ## 🔌 Integrations & Extensibility
 
-- 🔌 [Integration Center](./integrations/README.md) — Outbound API design patterns, webhooks, and secure server-side communications.
+- 🔌 **[Integration Center](./integrations/README.md)** — Outbound API security gates, Slack webhooks, and server-side client patterns.
 
 ---
 
-## 🤝 Project Contribution
+## 🧪 Testing & Quality Assurance
 
-- 🤝 [Contributing Guidelines](./CONTRIBUTING.md) — PR workflow, branch naming style, commit rules, and validation checks.
+- 📋 **[Backend & Database Test Plan](../backend/TEST_PLAN.md)** — Test matrices for database migrations, repositories, and authentication flows.
+- ♿ **[Accessibility Statement & Conformance](./ACCESSIBILITY.md)** — WCAG 2.1 AA benchmarks, screen reader support, and keyboard standards.
+
+---
+
+## 🤝 Community & Contribution
+
+- 🤝 **[Contributing Guidelines](../CONTRIBUTING.md)** — Git conventions, Conventional Commits, local validation, and PR checklist.
+- 🌟 **[Code of Conduct](../.github/CODE_OF_CONDUCT.md)** — Inclusive community standards and enforcement ladder.
+- 🛡️ **[Security Policy](../.github/SECURITY.md)** — Private vulnerability disclosure and supported versions.
+- 🆘 **[Support Resources](../SUPPORT.md)** — Help channels, troubleshooting, and maintainer contacts.
+- 🏛️ **[Project Governance](../GOVERNANCE.md)** — Maintainer responsibilities, roadmap steering, and decision-making model.
+- 📜 **[Changelog](../CHANGELOG.md)** — Version history and release notes.

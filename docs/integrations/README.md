@@ -44,5 +44,5 @@ To register a new integration safely:
 1. **Store Tokens Privately**: Add all credentials or API keys as private keys in your **`backend/.env`** file (e.g., `GITHUB_TOKEN=...`). Never check private keys into version control.
 2. **Implement an Infrastructure Client**: Create a service wrapper inside `backend/src/infrastructure/` (e.g., `backend/src/infrastructure/github/client.ts`) that initializes and manages HTTP request states.
 3. **Define a Controller**: Add a controller under `backend/src/presentation/controllers/` (e.g., `backend/src/presentation/controllers/GithubController.ts`) that reads the credentials securely using `process.env`, validates user session middleware context, and interacts with the infrastructure client.
-4. **Register the Routes**: Import and mount your controller actions within [backend/src/presentation/routes.ts](file:///c:/Users/Memo/Downloads/Dev%20Studio/Dev-Studio/backend/src/presentation/routes.ts).
+4. **Register the Routes**: Import and mount your controller actions within [`backend/src/presentation/routes.ts`](../../backend/src/presentation/routes.ts).
 5. **Consume the Endpoint in React**: Trigger the backend endpoint from client views using your custom React query Hooks or Zustand store actions.
