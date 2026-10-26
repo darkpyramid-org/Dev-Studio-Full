@@ -1,95 +1,134 @@
-# Accessibility
+# ♿ Accessibility Statement — Dev Studio
 
-<!--
-Include a brief statement describing why accessibility matters to your
-project, who should be able to use and contribute to it, and what this
-document covers, such as your accessibility commitments, contributor
-expectations, and issue-reporting process.
+> **Last reviewed:** October 2026
+> **Applies to:** [https://ms-dev-studio.vercel.app](https://ms-dev-studio.vercel.app) and the open-source codebase at [github.com/darkpyramid-org/Dev-Studio-Full](https://github.com/darkpyramid-org/Dev-Studio-Full)
 
-Write for people who may read this after encountering a barrier. Use plain
-language and describe user experiences rather than relying on legal
-language, technical jargon, or standards codes.
--->
+---
+
+## Our Commitment
+
+Dev Studio is built for developers by developers. We believe every person — regardless of disability, assistive technology, or environment — deserves full access to the tools that help them grow. We are actively working toward conformance with the **Web Content Accessibility Guidelines (WCAG) 2.1 Level AA**.
+
+This is a commitment and a living goal, not a one-time checkbox. We improve accessibility continuously with every release.
+
+---
 
 ## Priorities
 
-<!--
-Describe the outcomes the project prioritizes and how it works toward them.
-If you name a WCAG level as an accessibility target, make clear that it is
-an aspirational goal rather than a verified conformance claim. Only claim
-conformance after an evaluation, and identify the evaluated scope, date,
-method, and evaluator. Also describe the areas you prioritize, such as
-keyboard, screen reader, content, or language support.
--->
+We focus accessibility effort in this order:
 
-## Contributor expectations
+1. **Keyboard navigation** — Every feature must be reachable and operable without a mouse
+2. **Screen reader compatibility** — Semantic HTML, ARIA landmarks, and live regions for dynamic content
+3. **Visual clarity** — Sufficient color contrast (≥ 4.5:1 for body text, ≥ 3:1 for UI components), clear focus rings
+4. **Cognitive accessibility** — Plain language, consistent layouts, error messages that explain how to recover
+5. **Motion safety** — Animations respect `prefers-reduced-motion`
 
-<!--
-Describe the accessibility guardrails that apply to contributions,
-including relevant testing, documentation, and continuous integration
-checks. Name specific tools only when the project uses them, and explain
-what evidence contributors should include with user-facing changes.
--->
+---
 
-## Reporting accessibility issues
+## Contributor Expectations
 
-<!--
-Provide a direct, accessible way to report a barrier or request help.
-Invite useful context such as the affected task, URL, observed behavior,
-browser, operating system, and assistive technology. Make screenshots or
-recordings optional and do not require disability disclosure.
--->
+All UI contributions must meet the following before merging:
 
-### Severity
+| Requirement | Check |
+|-------------|-------|
+| All interactive elements reachable by keyboard | Manual test with Tab / Shift+Tab / Enter / Escape |
+| Focus ring visible on all focusable elements | Visual inspection in all supported browsers |
+| Images and icons have `alt` text or `aria-label` | Code review |
+| Color contrast ≥ 4.5:1 for text, ≥ 3:1 for UI | [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) |
+| Dynamic updates announced via `aria-live` | Screen reader test (NVDA/VoiceOver) |
+| No information conveyed by color alone | Visual inspection |
+| Form inputs have associated `<label>` elements | Code review |
+| Error messages are descriptive and linked to inputs | Manual test |
 
-<!--
-If your project uses severity levels, define them and give practical
-examples based on how strongly a barrier affects a user's ability to
-complete a task. Keep labels consistent with your issue template and
-resolution targets if those processes exist. Maintainers can assign or
-confirm severity during triage; reporters do not need to.
--->
+> [!TIP]
+> Install the [axe DevTools browser extension](https://www.deque.com/axe/devtools/) and run it on any page you modify before opening a PR. Include a screenshot of the report in your PR description.
 
-### How we respond
+---
 
-<!--
-Explain what reporters can expect after submitting an accessibility issue,
-including acknowledgement, status updates, workarounds, expected timelines,
-and opportunities to verify a fix. Use commitments your project can
-consistently uphold.
--->
+## Reporting Accessibility Issues
 
-## Ownership and maintenance
+If you encounter a barrier — something that prevents you from using a feature — please tell us.
 
-<!--
-Identify the team, role, or maintainer responsible for accessibility and
-describe their responsibilities to the project. Include the review cadence
-and how ownership transfers when responsibilities change.
--->
+**How to report:**
+- 🐛 Open an [Accessibility Issue](https://github.com/darkpyramid-org/Dev-Studio-Full/issues/new?template=accessibility.yml) on GitHub
+- 📧 Email **m.ssaid356@gmail.com** with subject `[ACCESSIBILITY] Dev Studio`
 
-## Supported environments
+**Please include (what you can — nothing is required):**
+- The task you were trying to complete
+- The URL or page where you encountered the barrier
+- What you observed vs. what you expected
+- Browser, operating system, and any assistive technology you use (e.g., screen reader name and version)
+- Screenshots or recordings (optional — never required)
 
-<!--
-List the platforms, devices, browsers, input methods, and assistive
-technologies the project supports or has tested. Include versions where
-useful, note partial support, and avoid implying support for combinations
-that have not been evaluated.
--->
+You do **not** need to disclose a disability to report an accessibility issue.
 
-## Known limitations
+---
 
-<!--
-Describe known barriers in terms of the affected user experience, such as
-"videos do not have captions," rather than standards codes. Include
-available workarounds or equivalent access and link to tracked issues. If
-no limitations are currently documented, describe what has been tested
-instead of claiming that no barriers exist.
--->
+## Severity Levels
 
-## Feedback and improvements
+| Severity | Definition | Target Response |
+|----------|-----------|-----------------|
+| 🔴 **Critical** | A feature is completely unusable without workaround | Patch within 7 days |
+| 🟠 **High** | A feature is difficult or partially inaccessible | Fix within 30 days |
+| 🟡 **Medium** | A barrier exists but a workaround is available | Fix in next minor release |
+| 🟢 **Low** | Visual polish or minor enhancement | Tracked for future sprint |
 
-<!--
-Explain how users and contributors can suggest improvements to this
-statement or the project's accessibility practices. Direct active
-accessibility barriers to the reporting process above.
--->
+### How We Respond
+
+1. **Acknowledgment** within 48 hours of receiving your report
+2. **Severity triage** within 5 business days
+3. **Status updates** at each milestone (investigation → fix → release)
+4. **Workaround** provided if a fix is delayed beyond 7 days for critical issues
+5. **Verification opportunity** — we'll invite you to confirm the fix works for you
+
+---
+
+## Supported Environments
+
+We test against the following combinations:
+
+| Browser | Version | Screen Reader | Platform |
+|---------|---------|--------------|---------|
+| Chrome | Latest | NVDA 2024+ | Windows 11 |
+| Firefox | Latest | NVDA 2024+ | Windows 11 |
+| Safari | Latest | VoiceOver | macOS Sonoma |
+| Chrome | Latest | TalkBack | Android 14 |
+
+**Input methods tested:** Keyboard only, mouse, touch, switch access
+
+> [!NOTE]
+> We have not yet conducted a formal independent audit. All conformance claims are aspirational targets backed by ongoing testing — not verified certification.
+
+---
+
+## Known Limitations
+
+| Area | Limitation | Workaround | Tracked Issue |
+|------|-----------|------------|---------------|
+| Code editor panels | Syntax highlighting color contrasts may fall below 4.5:1 in some themes | Use the high-contrast system theme | [#tracked] |
+| Toast notifications | Auto-dismiss toasts may disappear before screen readers announce them | Errors are also shown inline | [#tracked] |
+| Data tables | Some tables lack column header `scope` attributes | Use browser's reading mode | [#tracked] |
+| Rich text inputs | Markdown preview area not fully navigable by keyboard | Use raw text mode | [#tracked] |
+
+We are actively working to resolve these. If a limitation blocks you completely, please [report it](#reporting-accessibility-issues) so we can prioritize.
+
+---
+
+## Ownership & Maintenance
+
+| Role | Responsibility |
+|------|---------------|
+| **Maintainer** ([@Mostafa-SAID7](https://github.com/Mostafa-SAID7)) | Accessibility triage, PR reviews, quarterly statement review |
+| **Contributors** | Validate accessibility of their own UI changes before submitting |
+
+This statement is reviewed every **6 months** or after any major UI release. The review date is updated at the top of this document.
+
+---
+
+## Feedback on This Statement
+
+If this accessibility statement is itself unclear, missing information, or hard to use, please [open an issue](https://github.com/darkpyramid-org/Dev-Studio-Full/issues/new) or email us. Improving how we communicate about accessibility is part of the commitment.
+
+---
+
+*This statement follows the [W3C Accessibility Statement Generator](https://www.w3.org/WAI/planning/statements/) guidance.*

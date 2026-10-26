@@ -1,0 +1,102 @@
+name: ♿ Accessibility Issue
+description: Report a barrier that prevents or limits use of Dev Studio
+title: "[A11Y] "
+labels: ["accessibility", "needs-triage"]
+assignees: ["Mostafa-SAID7"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an accessibility issue. Your report helps make Dev Studio usable for everyone.
+
+        **You do not need to disclose a disability to file this report.** Include only what you're comfortable sharing. Screenshots and recordings are optional.
+
+  - type: textarea
+    id: task
+    attributes:
+      label: What were you trying to do?
+      description: Describe the task or goal you were working on when you encountered the barrier.
+      placeholder: "Example: I was trying to navigate the Prompts list using only my keyboard."
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Page or URL
+      description: Which page or section of the app did this happen on?
+      placeholder: "e.g. https://ms-dev-studio.vercel.app/prompts or the Auth page"
+    validations:
+      required: false
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened?
+      description: Describe the barrier you encountered — what did you observe?
+      placeholder: "Example: The 'Save Prompt' button is not reachable by keyboard — focus jumps past it."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: What should have happened instead?
+      placeholder: "Example: I expected to be able to Tab to the button and press Enter to activate it."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How severely does this affect your ability to use this feature?
+      options:
+        - "🔴 Critical — I cannot use this feature at all"
+        - "🟠 High — I can use it with significant difficulty"
+        - "🟡 Medium — I can use it with a workaround"
+        - "🟢 Low — Minor inconvenience, workaround is easy"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: "e.g. Chrome 130, Firefox 131, Safari 18"
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g. Windows 11, macOS Sonoma, Ubuntu 24.04, Android 14"
+    validations:
+      required: false
+
+  - type: input
+    id: at
+    attributes:
+      label: Assistive technology (if any)
+      description: Screen reader, switch access, voice control, magnification software, etc.
+      placeholder: "e.g. NVDA 2024.3, VoiceOver, Dragon NaturallySpeaking — or leave blank"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other details — console errors, recordings, or related issues.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find a duplicate
+          required: true
